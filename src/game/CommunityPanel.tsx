@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ShoppingBag, Trophy, UserRound, X, ArrowUpRight } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
+  DAILY_CAPTURE_LIMIT,
   ACTION_PACKS,
   CLUBS,
   clubById,
@@ -53,11 +54,20 @@ export function CommunityPanel({
             <ShoppingBag size={24} />
             <div>
               <strong>{game.balance} ações disponíveis</strong>
-              <span>Uma gratuita por dia + seu saldo de ações extras.</span>
+              <span>
+                {game.usedToday}/{DAILY_CAPTURE_LIMIT} conquistas hoje · {game.dailyRemaining}{" "}
+                restantes no limite diário.
+              </span>
             </div>
           </div>
           <p className="demo-commerce">
             Loja demonstrativa · Pix ainda não conectado. Nenhuma cobrança é feita.
+          </p>
+          <p className="shop-limit-note">
+            <strong>
+              Limite de {DAILY_CAPTURE_LIMIT} conquistas por dia, incluindo ações compradas.
+            </strong>{" "}
+            O saldo excedente fica guardado. Comprar um pacote não aumenta o limite de hoje.
           </p>
           <div className="pack-grid">
             {ACTION_PACKS.map((pack, i) => (
@@ -120,6 +130,11 @@ export function CommunityPanel({
                   {checkout?.actions} ações por {checkout ? money(checkout.cents) : ""}. Esta é uma
                   simulação local, sem pagamento real.
                 </Dialog.Description>
+                <p className="shop-limit-note">
+                  Limite de {DAILY_CAPTURE_LIMIT} conquistas por dia. Você já fez {game.usedToday}{" "}
+                  hoje; pode usar até {game.dailyRemaining} ações hoje. O restante do pacote fica no
+                  saldo para os próximos dias.
+                </p>
                 <div className="pix-preview">
                   <ShoppingBag size={34} />
                   <strong>Pix disponível na próxima integração</strong>

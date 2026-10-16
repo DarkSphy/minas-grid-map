@@ -1,6 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { localRepository } from "./repository";
-import { actionBalance, canAct, seasonEnds, type Cell, type ClubId, type World } from "./model";
+import { dailyMissions } from "./missions";
+import type { MissionId } from "./mission-content";
+import {
+  capturesToday,
+  dayInBrasilia,
+  DAILY_CAPTURE_LIMIT,
+  actionBalance,
+  canAct,
+  seasonEnds,
+  type Cell,
+  type ClubId,
+  type World,
+} from "./model";
 export function useGame() {
   const [world, setWorld] = useState<World | null>(null);
   const [id, setId] = useState<string | null>(null);
@@ -54,7 +66,24 @@ export function useGame() {
   };
   const player = world && id ? (world.players[id] ?? null) : null;
   const club = player && world ? (player.clubs[world.season] ?? null) : null;
+  const day = dayInBrasilia(now);
+  const usedToday = useMemo(
+    () => (world && id ? capturesToday(world, id, Date.parse(`${day}T12:00:00-03:00`)) : 0),
+    [world, id, day],
+  );
+  const missions = useMemo(
+    () => (world ? dailyMissions(world, player, Date.parse(`${day}T12:00:00-03:00`)) : null),
+    [world, player, day],
+  );
   return {
+    usedToday,
+    dailyRemaining: Math.max(0, DAILY_CAPTURE_LIMIT - usedToday),
+    limitReached: usedToday >= DAILY_CAPTURE_LIMIT,
+    missions,
+    claimMission: (missionId: MissionId, expectedDay: string) =>
+      run(() => localRepository.claimMission(id ?? "", expectedDay, missionId)),
+    answerQuiz: (expectedDay: string, questionId: string, answer: number) =>
+      run(() => localRepository.answerQuiz(id ?? "", expectedDay, questionId, answer)),
     world,
     player,
     club,
@@ -62,7 +91,7 @@ export function useGame() {
     error,
     pending,
     ready: !!world,
-    available: canAct(player, now),
+    available: canAct(player, now, usedToday),
     balance: actionBalance(player, now),
     demoPack: (packId: string, orderId: string) =>
       run(() => localRepository.demoPack(id ?? "", packId, orderId)),

@@ -145,3 +145,17 @@ A aba Loja oferece 5, 10 e 20 ações por R$ 4,90, R$ 9,80 e R$ 19,60, respectiv
 Torcida lista os perfis locais do clube na temporada, com nome, foto, territórios ainda controlados e troféus municipais. Ouro/prata/bronze correspondem às posições 1/2/3 por quantidade atual de territórios entre todos os jogadores de cada município. Empates compartilham posição (ranking de competição); territórios perdidos deixam de contar. Os troféus são destaques dinâmicos, não medalhas históricas, e reiniciam com o mapa da temporada. A seleção de território mostra o proprietário atual e destaca o próprio jogador. Não são renderizados avatares em milhões de células.
 
 A central de atividade recebeu um card opaco com bordas para contraste. Nenhuma geometria, resolução ou dependência foi alterada. Missões, recompensas e medalhas históricas ficam para uma próxima etapa.
+
+### Missões diárias e limite de conquistas
+
+A central de Missões é acessada pelo botão de alvo no topo, pela faixa de ações do mapa e pelo card lateral. A navegação inferior mantém as seis opções anteriores. Cada dia de Brasília oferece três recompensas de uma ação: primeira conquista (qualquer posição), pergunta correta e conquista em uma das três cidades destacadas. Conquistas neutras e retomadas rivais contam; uma mesma conquista pode completar os dois objetivos territoriais. A pergunta permite novas tentativas, sem consumir ações.
+
+Os objetivos territoriais são apurados pelos eventos de conquista, mesmo que o jogador perca o quadrado depois. Cada resgate é idempotente por jogador/dia/missão. A pergunta e o dia são validados na operação, impedindo o envio de um formulário antigo após meia-noite. Recompensas não resgatadas expiram com o dia; as resgatadas entram no saldo extra persistente, consumido depois da ação gratuita. São até quatro novas ações gratuitas por dia (uma base + três missões).
+
+O limite global é de oito conquistas por jogador por dia de Brasília, incluindo ações gratuitas, de missões e compradas. Ele é validado na função de conquista, além da interface, e conta eventos do dia inclusive ao atravessar temporadas. Saldo extra não é debitado quando o limite é atingido e permanece para outro dia. Loja e checkout explicitam esse limite antes de qualquer simulação de compra.
+
+O catálogo local versionado tem seis perguntas e doze municípios do mapa; três cidades alternam diariamente, com opções estáveis para todos durante o dia. Nesta versão não há escolha dinâmica por equilíbrio de torcidas: isso dependerá dos dados compartilhados no servidor. Clicar numa cidade da missão centraliza o mapa existente, sem alterar grade, geometrias ou zoom por gestos.
+
+Novos arquivos: src/game/mission-content.ts (catálogo), missions.ts (regras), MissionsPanel.tsx (interface), missions.test.ts (regras de resgate e limite). Perfis antigos permanecem compatíveis por meio de campos opcionais no esquema existente.
+
+Em produção, saldo, horário, geografia, conclusão e resgate devem ser validados por RPC autenticada no Supabase, com transação e chave única (jogador, dia, missão). O relógio do navegador não é autoridade. Autenticação real, mitigação de contas múltiplas, banco de perguntas protegido e defesa contra trocas combinadas continuam necessários antes de um lançamento multiplayer. Este adaptador segue localStorage/Web Locks; não oferece proteção de servidor.

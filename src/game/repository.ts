@@ -1,3 +1,5 @@
+import { answerDailyQuiz, claimDailyMission } from "./missions";
+import { MISSION_IDS, type MissionId } from "./mission-content";
 import { z } from "zod";
 import {
   redeemDemoPack,
@@ -42,6 +44,13 @@ const schema = z.object({
       joinedAt: z.number(),
       clubs: z.record(club),
       lastActionDay: z.string().nullable(),
+      missions: z
+        .object({
+          day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+          quizSolved: z.boolean(),
+          claimed: z.array(z.enum(MISSION_IDS)),
+        })
+        .optional(),
       extraActions: z.number().int().nonnegative().optional(),
       demoOrders: z.array(z.string()).optional(),
       avatar: z.string().refine(validAvatar).nullable().optional(),
@@ -70,6 +79,8 @@ export interface GameRepository {
   avatar(playerId: string, avatar: string | null): Promise<World>;
   markRead(playerId: string, ids: string[]): Promise<World>;
   demoPack(playerId: string, packId: string, orderId: string): Promise<World>;
+  answerQuiz(playerId: string, day: string, questionId: string, answer: number): Promise<World>;
+  claimMission(playerId: string, day: string, missionId: MissionId): Promise<World>;
   session(): string | null;
   setSession(id: string | null): void;
   subscribe(listener: () => void): () => void;
@@ -150,6 +161,10 @@ export const localRepository: GameRepository = {
   markRead: (playerId, ids) => mutate((w) => markNotificationsRead(w, playerId, ids)),
   demoPack: (playerId, packId, orderId) =>
     mutate((w) => redeemDemoPack(w, playerId, packId, orderId)),
+  answerQuiz: (playerId, day, questionId, answer) =>
+    mutate((w, now) => answerDailyQuiz(w, playerId, day, questionId, answer, now)),
+  claimMission: (playerId, day, missionId) =>
+    mutate((w, now) => claimDailyMission(w, playerId, day, missionId, now)),
   session: () => sessionStorage.getItem(SESSION),
   setSession: (id) => {
     if (id) sessionStorage.setItem(SESSION, id);

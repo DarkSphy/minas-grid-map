@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ShoppingBag, Users, Activity, X } from "lucide-react";
+import { Target, ShoppingBag, Users, Activity, X } from "lucide-react";
 import { ActivityFeed, NotificationBell, StateTicker } from "@/game/LivePanels";
 import { useEffect, useState } from "react";
 import { Map, BarChart3, Trophy, UserRound, ArrowUpRight } from "lucide-react";
 import { MgGrid } from "@/components/MgGrid";
 import { ClubCrest } from "@/game/ClubCrest";
+import { MissionsPanel } from "@/game/MissionsPanel";
 import { CommunityPanel } from "@/game/CommunityPanel";
 import { useGame } from "@/game/use-game";
 import { GamePanel, PlayerDialog, RankingTable } from "@/game/GamePanels";
-import { CLUBS, clubById, ranking, type Cell } from "@/game/model";
+import { CLUBS, clubById, ranking, DAILY_CAPTURE_LIMIT, type Cell } from "@/game/model";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,13 +35,20 @@ const tabs = [
   { id: "profile", label: "Perfil", icon: UserRound },
 ] as const;
 function Index() {
-  const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("map");
+  const [tab, setTab] = useState<(typeof tabs)[number]["id"] | "missions">("map");
   const game = useGame();
+  const [mapTarget, setMapTarget] = useState<{ city: string; request: number } | undefined>();
+  const openMissionMap = (target?: string) => {
+    setTab("map");
+    if (target)
+      setMapTarget((previous) => ({ city: target, request: (previous?.request ?? 0) + 1 }));
+  };
   const [dialog, setDialog] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [city, setCity] = useState("");
   const [cities, setCities] = useState<string[]>([]);
   const [toast, setToast] = useState("");
+  const readyRewards = game.missions?.missions.filter((m) => m.complete && !m.claimed).length ?? 0;
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 3500);
@@ -71,6 +79,16 @@ function Index() {
         </a>
         <div className="header-account">
           <span className="demo-caption">Demonstração local · dados deste navegador</span>
+          <button
+            className="missions-shortcut"
+            aria-label="Abrir missões diárias"
+            aria-pressed={tab === "missions"}
+            onClick={() => setTab("missions")}
+          >
+            <Target size={19} />
+            <span>Missões</span>
+            {readyRewards > 0 && <b>{readyRewards}</b>}
+          </button>
           <NotificationBell game={game} openLogin={enter} />
           <button
             className="account-button"
@@ -122,28 +140,39 @@ function Index() {
             >
               {game.club && <ClubCrest club={game.club} />}
               {game.club
-                ? clubById(game.club).initials +
-                  " · " +
-                  (game.available ? "1 ação hoje" : "0 ações hoje")
+                ? clubById(game.club).initials + " · " + `${game.balance} ações`
                 : "Escolher meu clube"}
             </button>
           </div>
-          {game.player && game.club && !game.available && (
-            <div className="actions-exhausted">
-              <span>
-                <strong>Suas ações esgotaram.</strong> Uma nova ação gratuita chega à meia-noite.
-              </span>
-              <button onClick={() => setTab("shop")}>
-                Ver pacotes <ShoppingBag size={15} />
+          {game.player && game.club && (
+            <div className={`daily-action-bar ${!game.available ? "needs-actions" : ""}`}>
+              <div>
+                <strong>
+                  {game.limitReached
+                    ? "Limite diário atingido"
+                    : `${game.usedToday}/${DAILY_CAPTURE_LIMIT} conquistas hoje`}
+                </strong>
+                <span>
+                  {game.limitReached
+                    ? "Seu saldo extra fica para os próximos dias."
+                    : !game.available
+                      ? "Sem ações? Complete missões para ganhar mais."
+                      : `${game.balance} no saldo · até ${game.dailyRemaining} conquistas hoje`}
+                </span>
+              </div>
+              <button onClick={() => setTab("missions")}>
+                <Target size={15} /> Missões
               </button>
             </div>
           )}
           <div className="map-stage">
             <MgGrid
+              targetCity={mapTarget}
+              limitReached={game.limitReached}
+              onMissions={() => setTab("missions")}
               territories={game.world?.territories}
               players={game.world?.players}
               playerId={game.player?.id}
-              onShop={() => setTab("shop")}
               playerClub={game.club}
               available={game.available}
               pending={game.pending}
@@ -167,10 +196,18 @@ function Index() {
             <span className="legend-scale">Células ≈ 500 m</span>
           </div>
         </section>
+        {tab === "missions" && (
+          <MissionsPanel
+            key={`${game.player?.id ?? "guest"}:${game.missions?.day}`}
+            game={game}
+            openLogin={enter}
+            openMap={openMissionMap}
+          />
+        )}
         {(tab === "shop" || tab === "supporters") && (
           <CommunityPanel tab={tab} game={game} openLogin={enter} openMap={() => setTab("map")} />
         )}
-        {tab !== "map" && tab !== "shop" && tab !== "supporters" && (
+        {tab !== "map" && tab !== "shop" && tab !== "supporters" && tab !== "missions" && (
           <GamePanel
             tab={tab}
             game={game}
@@ -193,6 +230,13 @@ function Index() {
               Ver ranking completo
             </button>
             <p>Busque um dos 853 municípios de Minas e aproxime para explorar cada quadrado.</p>
+            <button className="side-missions-button" onClick={() => setTab("missions")}>
+              <Target size={18} />
+              <span>
+                Missões diárias<small>Até +3 ações para sua torcida</small>
+              </span>
+              <ArrowUpRight size={16} />
+            </button>
             <div className="side-steps">
               <span>
                 <b>01</b> Encontre sua cidade

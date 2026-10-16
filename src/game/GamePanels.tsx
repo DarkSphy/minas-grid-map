@@ -3,6 +3,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X, ArrowUpRight, LogOut, Shield, Trophy } from "lucide-react";
 import {
   dayInBrasilia,
+  DAILY_CAPTURE_LIMIT,
   CLUBS,
   clubById,
   countdown,
@@ -230,6 +231,16 @@ export function GamePanel({
                   <b>{game.balance}</b>
                   <span>ação gratuita disponível</span>
                 </div>
+              </div>
+              <div className="panel-note">
+                <strong>
+                  {game.usedToday}/{DAILY_CAPTURE_LIMIT} conquistas hoje
+                </strong>
+                <span>
+                  {game.limitReached
+                    ? "Limite atingido. Seu saldo extra fica guardado."
+                    : `${game.dailyRemaining} conquistas restantes no limite diário, incluindo ações compradas.`}
+                </span>
               </div>
               <div className="panel-note">
                 {player.lastActionDay !== dayInBrasilia(now)

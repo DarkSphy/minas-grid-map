@@ -2387,3 +2387,429 @@ button:disabled {
   position: static;
   box-shadow: none;
 }
+/* Daily missions: compact entry points keep the map and six-tab navigation clear. */
+.missions-shortcut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 11px;
+  border: 1px solid #2d5d47;
+  border-radius: 10px;
+  background: #0e271f;
+  color: #87f3af;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.missions-shortcut[aria-pressed="true"] {
+  border-color: #2ced8e;
+  background: #17452f;
+}
+.missions-shortcut b {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f9e32c;
+  color: #10211a;
+  font-size: 10px;
+}
+.side-missions-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  margin: 20px 0 0;
+  padding: 14px 10px;
+  background: #123329;
+  border: 1px solid #31634b;
+  border-radius: 10px;
+  color: #b6f9cf;
+  font-size: 12px;
+}
+.side-missions-button span {
+  flex: 1;
+}
+.side-missions-button small {
+  display: block;
+  margin-top: 4px;
+  color: #aac8b7;
+  font-size: 10px;
+}
+.daily-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  background: #0b231f;
+  border: 1px solid #284c3d;
+  border-bottom: 0;
+  color: #d3f5e1;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.daily-action-bar strong,
+.daily-action-bar span {
+  display: block;
+}
+.daily-action-bar span {
+  color: #a9c7b8;
+  font-size: 10px;
+  margin-top: 2px;
+}
+.daily-action-bar button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 9px;
+  border: 1px solid #37624b;
+  border-radius: 6px;
+  color: #f4e442;
+  white-space: nowrap;
+}
+.daily-action-bar.needs-actions {
+  border-color: #726e30;
+}
+.missions-panel h2 {
+  max-width: 600px;
+}
+.mission-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 24px 0 18px;
+}
+.mission-summary > div {
+  padding: 20px;
+  background: linear-gradient(130deg, #12392b, #0a1e26);
+  border: 1px solid #2d5947;
+  border-radius: 14px;
+}
+.mission-summary > div > span {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #b3d1c0;
+}
+.mission-summary strong {
+  display: block;
+  font-size: 40px;
+  line-height: 1.2;
+  margin-top: 8px;
+  color: #e1ffed;
+  font-weight: 800;
+}
+.mission-summary strong small {
+  font-size: 18px;
+  color: #8eb5a2;
+}
+.mission-summary p {
+  font-size: 11px;
+  margin: 8px 0 0;
+  line-height: 1.6;
+  color: #b3cdbf;
+}
+.mission-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #a9c5b6;
+  font-size: 10px;
+}
+.mission-refresh span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mission-progress {
+  display: block;
+  width: 100%;
+  height: 5px;
+  border: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  accent-color: #1be888;
+  margin: 12px 0 24px;
+  background: #213b33;
+}
+.mission-progress::-webkit-progress-bar {
+  background: #213b33;
+}
+.mission-progress::-webkit-progress-value {
+  background: #1be888;
+}
+.mission-progress::-moz-progress-bar {
+  background: #1be888;
+}
+.mission-cards {
+  display: grid;
+  gap: 16px;
+}
+.mission-card {
+  padding: 22px;
+  background: #091f27;
+  border: 1px solid #2a4851;
+  border-radius: 14px;
+}
+.mission-card.is-complete {
+  border-color: #20cf7c;
+}
+.mission-card.is-claimed {
+  background: #0c2722;
+  border-color: #315746;
+}
+.mission-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mission-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #163e2c;
+  color: #45ee9c;
+}
+.mission-card-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.mission-card h3 {
+  font-size: 18px;
+  line-height: 1.3;
+  margin: 0 0 4px;
+}
+.mission-status {
+  font-size: 10px;
+  color: #a7c5b5;
+}
+.mission-reward {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f6e65e;
+  padding: 6px 8px;
+  border: 1px solid #766c2e;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.mission-card > p {
+  font-size: 13px;
+  margin: 16px 0;
+  line-height: 1.7;
+}
+.mission-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #29453c;
+  padding-top: 16px;
+  margin-top: 18px;
+}
+.mission-card-footer > span {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 11px;
+  color: #b1d5bf;
+}
+.mission-card-footer button {
+  font-size: 10px;
+  min-height: 40px;
+  padding: 10px 13px;
+}
+.mission-city-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mission-city {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #102e2a;
+  border: 1px solid #3a6150;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 11px;
+  color: #d7f9e4;
+}
+.mission-city:hover {
+  border-color: #31e493;
+}
+.daily-quiz {
+  background: #06181d;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.daily-quiz legend {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  color: #dff1e6;
+}
+.daily-quiz fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.daily-quiz label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 12px 10px;
+  border: 1px solid #27493d;
+  border-radius: 7px;
+  margin: 8px 0;
+  color: #c8dfd1;
+  font-size: 12px;
+}
+.daily-quiz label:has(input:checked) {
+  border-color: #21dd88;
+  background: #12392a;
+}
+.daily-quiz input {
+  accent-color: #20df88;
+  flex-shrink: 0;
+}
+.daily-quiz .war-secondary {
+  font-size: 10px;
+  margin-top: 10px;
+}
+.quiz-explanation {
+  display: flex;
+  gap: 8px;
+  color: #9aefb9 !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+  margin: 14px 0 0 !important;
+}
+.quiz-explanation svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.shop-limit-note {
+  padding: 14px;
+  border: 1px solid #766b34;
+  border-radius: 9px;
+  background: #36301644;
+  color: #e6dfbd !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+}
+.shop-limit-note strong {
+  display: block;
+  margin-bottom: 4px;
+}
+.missions-panel .panel-note .war-primary {
+  margin-top: 14px;
+}
+@media (max-width: 1000px) {
+  .missions-shortcut {
+    padding: 8px;
+  }
+  .missions-shortcut > span {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .missions-shortcut {
+    width: 34px;
+    height: 36px;
+    min-height: 36px;
+    justify-content: center;
+    padding: 5px;
+    margin-right: 5px;
+  }
+  .missions-shortcut b {
+    position: absolute;
+    right: -4px;
+    top: -6px;
+    min-width: 15px;
+    height: 15px;
+    font-size: 9px;
+  }
+  .missions-panel h2 {
+    font-size: 30px;
+  }
+  .mission-summary {
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .mission-summary > div {
+    padding: 14px 10px;
+  }
+  .mission-summary strong {
+    font-size: 32px;
+  }
+  .mission-summary > div > span {
+    font-size: 9px;
+  }
+  .mission-card {
+    padding: 16px 12px;
+  }
+  .mission-card h3 {
+    font-size: 16px;
+  }
+  .mission-card-heading {
+    gap: 8px;
+  }
+  .mission-icon {
+    width: 32px;
+    height: 34px;
+  }
+  .mission-reward {
+    padding: 5px;
+    font-size: 10px;
+  }
+  .mission-card-footer {
+    flex-wrap: wrap;
+  }
+  .daily-quiz {
+    padding: 12px;
+  }
+  .daily-action-bar {
+    padding: 6px 9px;
+  }
+  .daily-action-bar strong {
+    font-size: 10px;
+  }
+  .daily-action-bar span {
+    font-size: 9px;
+  }
+  .daily-action-bar button {
+    padding: 6px;
+    font-size: 10px;
+  }
+  .war-brand .brand-original {
+    width: min(185px, 100%);
+  }
+}
+@media (max-height: 500px) and (min-width: 701px) {
+  .daily-action-bar {
+    padding: 4px 9px;
+  }
+  .daily-action-bar > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .daily-action-bar span {
+    margin: 0;
+  }
+  .daily-action-bar button {
+    padding: 4px 8px;
+  }
+}

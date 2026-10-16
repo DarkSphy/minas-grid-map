@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { Plus, Minus, Maximize, X, MapPin } from "lucide-react";
 import {
   CLUBS,
@@ -177,9 +177,11 @@ async function buildGrid(): Promise<Grid> {
 }
 
 type Props = {
+  targetCity?: { city: string; request: number } | undefined;
+  limitReached: boolean;
+  onMissions: () => void;
   players?: Record<string, import("@/game/model").Player> | undefined;
   playerId?: string | undefined;
-  onShop: () => void;
   territories?: Record<string, Territory> | undefined;
   playerClub: ClubId | null;
   available: boolean;
@@ -229,7 +231,7 @@ export function MgGrid(props: Props) {
       ? grid.muns.filter((m) => norm(m.name).includes(norm(query.trim()))).slice(0, 10)
       : [];
 
-  const flyTo = (m: Mun) => {
+  const flyTo = useCallback((m: Mun) => {
     const el = wrap.current;
     if (!el) return;
     const w = el.clientWidth,
@@ -246,7 +248,7 @@ export function MgGrid(props: Props) {
     setOpen(false);
     setQuery(m.name);
     drawRef.current();
-  };
+  }, []);
 
   useEffect(() => {
     const onDocDown = (e: MouseEvent) => {
@@ -663,6 +665,13 @@ export function MgGrid(props: Props) {
     previousOwners.current = props.territories;
     drawRef.current();
   }, [grid, props.territories]);
+  useEffect(() => {
+    if (!props.targetCity || !grid) return;
+    const city = grid.muns.find((m) => m.name === props.targetCity?.city);
+    if (!city) return;
+    const frame = requestAnimationFrame(() => flyTo(city));
+    return () => cancelAnimationFrame(frame);
+  }, [props.targetCity, grid, flyTo]);
   const municipalRows = useMemo(
     () => municipalRankings(props.territories ?? {}),
     [props.territories],
@@ -913,7 +922,7 @@ export function MgGrid(props: Props) {
               disabled={!props.ready || props.pending || alreadyOurs}
               onClick={() => {
                 if (props.playerClub && !props.available) {
-                  props.onShop();
+                  props.onMissions();
                   return;
                 }
                 if (selected)
@@ -932,7 +941,9 @@ export function MgGrid(props: Props) {
                 : alreadyOurs
                   ? "TERRITÓRIO DA SUA TORCIDA"
                   : props.playerClub && !props.available
-                    ? "AÇÃO DE HOJE UTILIZADA"
+                    ? props.limitReached
+                      ? "LIMITE DIÁRIO · VER MISSÕES"
+                      : "GANHAR AÇÕES EM MISSÕES"
                     : "CONQUISTAR TERRITÓRIO"}
             </button>
             {selected.mun && (

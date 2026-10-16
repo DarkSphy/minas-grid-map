@@ -1,3 +1,4 @@
+import type { MissionId } from "./mission-content";
 export const CLUBS = [
   {
     id: "cruzeiro",
@@ -32,6 +33,7 @@ export type Player = {
   clubs: Record<string, ClubId>;
   lastActionDay: string | null;
   extraActions?: number | undefined;
+  missions?: { day: string; quizSolved: boolean; claimed: MissionId[] } | undefined;
   demoOrders?: string[] | undefined;
   avatar?: string | null | undefined;
   readNotifications?: string[] | undefined;
@@ -118,8 +120,15 @@ export function rollSeason(world: World, now: number): World {
   };
   return { ...world, season: number, territories: {}, history: [...world.history, summary] };
 }
-export function canAct(player: Player | null, now: number) {
-  return actionBalance(player, now) > 0;
+export const DAILY_CAPTURE_LIMIT = 8;
+export function capturesToday(world: World, playerId: string, now: number) {
+  const start = Date.parse(`${dayInBrasilia(now)}T00:00:00-03:00`);
+  return world.captures.filter(
+    (c) => c.playerId === playerId && c.claimedAt >= start && c.claimedAt < start + DAY,
+  ).length;
+}
+export function canAct(player: Player | null, now: number, usedToday = 0) {
+  return actionBalance(player, now) > 0 && usedToday < DAILY_CAPTURE_LIMIT;
 }
 export function loginPlayer(world: World, name: string, now: number): { world: World; id: string } {
   const clean = name.trim().replace(/\s+/g, " ").slice(0, 48);
@@ -147,6 +156,10 @@ export function captureCell(world: World, playerId: string, cell: Cell, now: num
   if (!player) throw new Error("Entre para conquistar um território.");
   const club = player.clubs[world.season];
   if (!club) throw new Error("Escolha seu clube antes de conquistar.");
+  if (capturesToday(world, playerId, now) >= DAILY_CAPTURE_LIMIT)
+    throw new Error(
+      "Limite de oito conquistas diárias atingido. Seu saldo extra está guardado para os próximos dias.",
+    );
   if (!canAct(player, now))
     throw new Error("Você já usou sua ação de hoje. Uma nova ação chega à meia-noite de Brasília.");
   if (world.territories[cell.id]?.club === club)
