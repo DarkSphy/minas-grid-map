@@ -236,6 +236,7 @@ export function MgGrid() {
     const onUp = () => { drag = null; };
     const onLeave = () => { hover.current = null; hoverMun.current = null; setTip(null); draw(); };
     const onWheel = (e: WheelEvent) => {
+      if (inBox(e.target)) return;
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
