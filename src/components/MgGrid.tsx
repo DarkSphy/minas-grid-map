@@ -269,6 +269,49 @@ export function MgGrid() {
       </div>
       <div ref={wrap} className="relative flex-1 cursor-crosshair touch-none overflow-hidden rounded-xl border bg-card">
         <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
+        <div ref={boxRef} className="absolute left-3 top-3 z-20 w-64 max-w-[calc(100%-1.5rem)]">
+          <div className="flex items-center gap-2 rounded-md border bg-popover px-2.5 py-1.5 shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-muted-foreground">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              onKeyDown={(e) => { if (e.key === "Enter" && results[0]) flyTo(results[0]); if (e.key === "Escape") setOpen(false); }}
+              placeholder="Buscar município…"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => { setQuery(""); setOpen(false); focusMun.current = null; drawRef.current(); }}
+                aria-label="Limpar busca"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-4 w-4"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            )}
+          </div>
+          {open && query.trim() && (
+            <div className="mt-1 max-h-64 overflow-auto rounded-md border bg-popover py-1 shadow-lg">
+              {results.length === 0 ? (
+                <div className="px-2.5 py-1.5 text-sm text-muted-foreground">Nenhum município encontrado</div>
+              ) : (
+                results.map((m) => (
+                  <button
+                    key={m.name}
+                    type="button"
+                    onClick={() => flyTo(m)}
+                    className="block w-full px-2.5 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {m.name}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
         {tip && (
           <div
             className="pointer-events-none absolute z-10 rounded-md bg-popover px-2.5 py-1.5 font-mono text-xs text-popover-foreground shadow-lg"
