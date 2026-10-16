@@ -194,6 +194,7 @@ export function MgGrid() {
         ctx.strokeStyle = colors.border; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, sz, sz);
       }
     };
+    drawRef.current = draw;
 
     const fit = () => {
       const w = el.clientWidth, h = el.clientHeight;
