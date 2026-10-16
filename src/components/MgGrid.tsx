@@ -91,7 +91,37 @@ export function MgGrid() {
   const view = useRef({ scale: 1, ox: 0, oy: 0 });
   const hover = useRef<{ c: number; r: number } | null>(null);
   const hoverMun = useRef<Mun | null>(null);
+  const focusMun = useRef<Mun | null>(null);
+  const drawRef = useRef<() => void>(() => {});
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
   const [tip, setTip] = useState<{ x: number; y: number; c: number; r: number; lat: number; lon: number; mun?: string | undefined } | null>(null);
+
+  const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const results = grid && query.trim()
+    ? grid.muns.filter((m) => norm(m.name).includes(norm(query.trim()))).slice(0, 10)
+    : [];
+
+  const flyTo = (m: Mun) => {
+    const el = wrap.current;
+    if (!el) return;
+    const w = el.clientWidth, h = el.clientHeight;
+    const s = Math.min(60, Math.max(0.1, Math.min(w / (m.bw * 1.6), h / (m.bh * 1.6))));
+    view.current = { scale: s, ox: w / 2 - m.cx * s, oy: h / 2 - m.cy * s };
+    focusMun.current = m;
+    setOpen(false);
+    setQuery(m.name);
+    drawRef.current();
+  };
+
+  useEffect(() => {
+    const onDocDown = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocDown);
+    return () => document.removeEventListener("mousedown", onDocDown);
+  }, []);
 
   useEffect(() => { buildGrid().then(setGrid); }, []);
 
