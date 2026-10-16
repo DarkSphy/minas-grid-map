@@ -5,6 +5,9 @@ import {
   loginPlayer,
   chooseClub,
   captureCell,
+  updateAvatar,
+  markNotificationsRead,
+  validAvatar,
   type Cell,
   type ClubId,
   type World,
@@ -38,10 +41,18 @@ const schema = z.object({
       joinedAt: z.number(),
       clubs: z.record(club),
       lastActionDay: z.string().nullable(),
+      avatar: z.string().refine(validAvatar).nullable().optional(),
+      readNotifications: z.array(z.string()).optional(),
     }),
   ),
   territories: z.record(territory),
-  captures: z.array(territory.extend({ season: z.number().int().positive() })),
+  captures: z.array(
+    territory.extend({
+      season: z.number().int().positive(),
+      previousPlayerId: z.string().optional(),
+      previousClub: club.optional(),
+    }),
+  ),
   history: z.array(
     z.object({ number: z.number(), endedAt: z.number(), ranking: z.array(row), total: z.number() }),
   ),
@@ -50,9 +61,11 @@ const KEY = "soccer-war:demo:v1";
 const SESSION = "soccer-war:demo:player";
 export interface GameRepository {
   load(): Promise<World>;
-  login(name: string): Promise<{ world: World; id: string }>;
+  login(name: string, avatar?: string | null): Promise<{ world: World; id: string }>;
   choose(playerId: string, club: ClubId): Promise<World>;
   capture(playerId: string, cell: Cell): Promise<World>;
+  avatar(playerId: string, avatar: string | null): Promise<World>;
+  markRead(playerId: string, ids: string[]): Promise<World>;
   session(): string | null;
   setSession(id: string | null): void;
   subscribe(listener: () => void): () => void;
@@ -118,17 +131,19 @@ async function mutate(change: (world: World, now: number) => World): Promise<Wor
 // Browser-only adapter. Production methods must call authenticated, atomic server RPCs.
 export const localRepository: GameRepository = {
   load: loadWorld,
-  async login(name) {
+  async login(name, avatar) {
     let id = "";
     const world = await mutate((w, now) => {
       const result = loginPlayer(w, name, now);
       id = result.id;
-      return result.world;
+      return avatar ? updateAvatar(result.world, result.id, avatar) : result.world;
     });
     return { world, id };
   },
   choose: (playerId, club) => mutate((w) => chooseClub(w, playerId, club)),
   capture: (playerId, cell) => mutate((w, now) => captureCell(w, playerId, cell, now)),
+  avatar: (playerId, avatar) => mutate((w) => updateAvatar(w, playerId, avatar)),
+  markRead: (playerId, ids) => mutate((w) => markNotificationsRead(w, playerId, ids)),
   session: () => sessionStorage.getItem(SESSION),
   setSession: (id) => {
     if (id) sessionStorage.setItem(SESSION, id);

@@ -1494,3 +1494,579 @@ button:disabled {
     width: auto;
   }
 }
+
+/* State dynamics and account tools. */
+.activity-feed h2 {
+  font-size: 24px;
+  font-weight: 750;
+  line-height: 1.2;
+  margin: 14px 0 8px;
+}
+.activity-caption {
+  font-size: 10px !important;
+  color: #91b09e !important;
+  margin-bottom: 20px;
+}
+.activity-list {
+  display: grid;
+  gap: 0;
+}
+.activity-empty {
+  padding: 18px 0;
+  border-top: 1px solid #456450;
+}
+.activity-empty strong {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.activity-empty p {
+  font-size: 12px;
+}
+.activity-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 0;
+  border-top: 1px solid #345342;
+}
+.activity-event .club-crest {
+  width: 30px;
+  height: 35px;
+  margin-top: 3px;
+}
+.activity-event strong {
+  font-size: 12px;
+}
+.activity-event p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 6px 0;
+}
+.activity-event span {
+  font-size: 10px;
+  color: #a0b8aa;
+}
+.activity-season {
+  margin-top: 20px;
+  padding: 16px 0;
+  border-top: 1px solid #456450;
+  font-size: 12px;
+  color: #d0e2d5;
+}
+.activity-season span {
+  display: block;
+  color: #99b3a1;
+  margin-top: 7px;
+  font-size: 11px;
+}
+.activity-mobile-button {
+  display: none;
+}
+.notification-button {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+  color: #d5e5dc;
+  border: 1px solid #355448;
+  border-radius: 6px;
+}
+.notification-count {
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: grid;
+  place-content: center;
+  border-radius: 10px;
+  background: #ecd72a;
+  color: #14231a;
+  font-size: 10px;
+  font-weight: 750;
+}
+.notification-popover {
+  z-index: 65;
+  width: min(370px, calc(100vw - 24px));
+  max-height: min(70dvh, 560px);
+  overflow-y: auto;
+  background: #0a1b22;
+  color: #e2eee5;
+  border: 1px solid #446454;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 15px 50px #0009;
+}
+.notification-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.notification-heading h2 {
+  font-weight: 750;
+  font-size: 18px;
+}
+.notification-heading button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-content: center;
+}
+.notification-popover > p {
+  color: #9eb6aa;
+  font-size: 13px;
+  line-height: 1.7;
+  margin-top: 16px;
+}
+.notification-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 10px;
+  color: #9eb8a9;
+  align-items: center;
+  margin: 12px 0;
+}
+.notification-actions button {
+  min-height: 36px;
+  color: #a3dfb4;
+  text-decoration: underline;
+}
+.notification-item {
+  display: flex;
+  gap: 10px;
+  padding: 14px 8px;
+  border-top: 1px solid #2b463a;
+  font-size: 12px;
+  border-left: 2px solid transparent;
+}
+.notification-item.unread {
+  border-left-color: #dfcf32;
+  background: #dfcf3208;
+}
+.notification-item p {
+  margin-top: 7px;
+  color: #a5bfb1;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.notification-item time {
+  display: block;
+  font-size: 9px;
+  color: #7e9e8d;
+  margin-top: 7px;
+}
+.notification-item .club-crest {
+  width: 25px;
+  height: 30px;
+}
+.notification-footnote {
+  display: block;
+  border-top: 1px solid #2b463a;
+  padding-top: 14px;
+  font-size: 9px;
+  color: #91ab9d;
+}
+.state-ticker {
+  display: flex;
+  flex-shrink: 0;
+  height: 48px;
+  border-bottom: 1px solid #314b3c;
+  background: #06151cee;
+  min-width: 0;
+  overflow: hidden;
+}
+.ticker-label {
+  flex-shrink: 0;
+  width: 106px;
+  display: grid;
+  align-content: center;
+  padding-left: 18px;
+  gap: 3px;
+  border-right: 1px solid #2e483a;
+  background: #0b1e21;
+  z-index: 1;
+}
+.ticker-label b {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #d6d169;
+}
+.ticker-label span {
+  font-size: 8px;
+  color: #92ac9a;
+}
+.ticker-viewport {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 44s linear infinite;
+}
+.ticker-group {
+  display: flex;
+  flex-shrink: 0;
+}
+.ticker-state {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 24px;
+  border-right: 1px solid #2b4237;
+}
+.ticker-state > strong {
+  font-size: 11px;
+  color: #bed0c5;
+}
+.ticker-team {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.ticker-team img {
+  object-fit: contain;
+  width: 25px;
+  height: 28px;
+}
+.ticker-team b {
+  color: #dceaa9;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.ticker-pause {
+  width: 40px;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+  background: #0b1e21;
+  border-left: 1px solid #2e483a;
+  color: #91aa99;
+}
+.state-ticker.paused .ticker-track,
+.state-ticker:hover .ticker-track,
+.state-ticker:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.header-avatar {
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #6c9278;
+  flex-shrink: 0;
+}
+.avatar-input {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin: 22px 0;
+}
+.avatar-preview {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #173429;
+  border: 1px solid #4e7057;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+}
+.avatar-preview img,
+.profile-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.photo-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  position: relative;
+  color: #c6dfcd;
+  font-size: 12px;
+  cursor: pointer;
+}
+.photo-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+}
+.photo-button:focus-within {
+  outline: 2px solid #54ba75;
+  outline-offset: 3px;
+}
+.avatar-input small {
+  color: #91ac98;
+  font-size: 9px;
+  display: block;
+}
+.remove-photo {
+  min-height: 32px;
+  padding: 5px 0;
+  font-size: 10px;
+}
+.avatar-input .game-error {
+  width: 100%;
+  font-size: 12px;
+}
+.state-explorer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid #315142;
+  border-radius: 7px;
+  background: #07191fec;
+  min-height: 39px;
+}
+.state-explorer > span {
+  display: none;
+}
+.state-explorer select {
+  color-scheme: dark;
+  width: 100%;
+  background: transparent;
+  font-size: 12px;
+  color: #d0e3d3;
+  outline-offset: 3px;
+}
+.state-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #172d23;
+  color: #c4d6bf;
+  border: 1px solid #486044;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.state-notice button {
+  min-width: 28px;
+  min-height: 28px;
+  display: grid;
+  place-content: center;
+}
+.grid-tools {
+  top: 121px;
+}
+.map-footer {
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+  padding: 12px 4px;
+}
+.map-footer span {
+  gap: 9px;
+}
+.map-footer i {
+  width: 14px;
+  height: 14px;
+}
+.map-footer .club-crest {
+  width: 27px;
+  height: 30px;
+}
+.legend-scale {
+  color: #a2b6aa;
+  font-size: 10px;
+}
+@media (max-width: 1150px) {
+  .header-account .demo-caption {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .war-header {
+    gap: 10px;
+  }
+  .header-account {
+    gap: 10px;
+  }
+  .war-brand .brand-original {
+    width: min(190px, 100%);
+  }
+  .account-button {
+    max-width: 100px;
+  }
+  .account-button:has(.header-avatar) {
+    padding-block: 5px;
+  }
+  .notification-button {
+    width: 38px;
+    height: 40px;
+  }
+  .activity-mobile-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-start;
+    color: #a4c5ae;
+    font-size: 11px;
+    min-height: 32px;
+    padding-bottom: 8px;
+  }
+  .activity-mobile-button span {
+    margin-left: auto;
+    font-size: 10px;
+  }
+  .activity-dialog .activity-feed h2 {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-style: normal;
+  }
+  .ticker-label {
+    width: 82px;
+    padding-left: 12px;
+  }
+  .ticker-label span {
+    font-size: 7px;
+  }
+  .ticker-state {
+    padding-inline: 16px;
+    gap: 10px;
+  }
+  .ticker-team {
+    font-size: 10px;
+  }
+  .ticker-state > strong {
+    font-size: 10px;
+  }
+  .map-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 12px;
+    padding-block: 8px;
+    font-size: 11px;
+  }
+  .map-footer .club-crest {
+    width: 24px;
+    height: 27px;
+  }
+  .legend-scale {
+    grid-column: 1/-1;
+    font-size: 9px;
+  }
+  .state-explorer select {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+  .ticker-group[aria-hidden] {
+    display: none;
+  }
+  .ticker-viewport {
+    overflow-x: auto;
+  }
+}
+/* Keep navigation controls reachable on short phone screens and in landscape. */
+@media (max-height: 650px) {
+  .grid-tools {
+    top: auto;
+    bottom: 8px;
+    display: flex;
+    gap: 4px;
+  }
+  .grid-tools button {
+    width: 40px;
+    height: 40px;
+  }
+  .grid-hint {
+    display: none;
+  }
+  .map-footer .club-crest {
+    width: 22px;
+    height: 24px;
+  }
+  .legend-scale {
+    display: none;
+  }
+}
+@media (max-height: 500px) and (min-width: 701px) {
+  .war-brand .brand-original {
+    width: 150px;
+  }
+  .war-header {
+    min-height: 0;
+    padding-block: 5px;
+  }
+  .state-ticker,
+  .ticker-state {
+    height: 38px;
+  }
+  .war-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-block: 8px 6px;
+  }
+  .war-intro,
+  .war-sidebar {
+    display: none;
+  }
+  .war-main,
+  .war-panel {
+    flex: 1;
+  }
+  .war-panel {
+    align-self: stretch;
+  }
+  .activity-mobile-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #a4c5ae;
+    font-size: 10px;
+    min-height: 24px;
+  }
+  .activity-mobile-button span {
+    margin-left: auto;
+  }
+  .map-heading {
+    padding-bottom: 6px;
+  }
+  .map-heading h2 {
+    font-size: 22px;
+    margin-top: 3px;
+  }
+  .map-player-action {
+    min-height: 32px;
+    padding-block: 5px;
+  }
+  .map-footer {
+    padding-block: 5px;
+  }
+  .war-nav button {
+    min-height: 44px;
+  }
+}

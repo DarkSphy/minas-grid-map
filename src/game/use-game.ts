@@ -65,9 +65,9 @@ export function useGame() {
     available: canAct(player, now),
     clearError: () => setError(""),
     refresh,
-    async login(name: string) {
+    async login(name: string, avatar?: string | null) {
       return run(async () => {
-        const result = await localRepository.login(name);
+        const result = await localRepository.login(name, avatar);
         try {
           localRepository.setSession(result.id);
         } catch {
@@ -87,6 +87,8 @@ export function useGame() {
       setId(null);
       setError("");
     },
+    setAvatar: (avatar: string | null) => run(() => localRepository.avatar(id ?? "", avatar)),
+    markRead: (ids: string[]) => run(() => localRepository.markRead(id ?? "", ids)),
     choose: (clubId: ClubId) => run(() => localRepository.choose(id ?? "", clubId)),
     capture: (cell: Cell) => run(() => localRepository.capture(id ?? "", cell)),
   };

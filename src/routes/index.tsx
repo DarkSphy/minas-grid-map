@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Activity, X } from "lucide-react";
+import { ActivityFeed, NotificationBell, StateTicker } from "@/game/LivePanels";
 import { useEffect, useState } from "react";
 import { Map, BarChart3, Trophy, UserRound, ArrowUpRight } from "lucide-react";
 import { MgGrid } from "@/components/MgGrid";
@@ -31,6 +34,7 @@ function Index() {
   const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("map");
   const game = useGame();
   const [dialog, setDialog] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
   const [city, setCity] = useState("");
   const [cities, setCities] = useState<string[]>([]);
   const [toast, setToast] = useState("");
@@ -64,44 +68,38 @@ function Index() {
         </a>
         <div className="header-account">
           <span className="demo-caption">Demonstração local · dados deste navegador</span>
+          <NotificationBell game={game} openLogin={enter} />
           <button
             className="account-button"
             disabled={!game.ready}
             onClick={() => (game.player ? setTab("profile") : enter())}
           >
-            <UserRound size={16} />
+            {game.player?.avatar ? (
+              <img
+                className="header-avatar"
+                src={game.player.avatar}
+                alt={`Foto de ${game.player.name}`}
+              />
+            ) : (
+              <UserRound size={16} />
+            )}
             {game.player?.name ?? "Entrar"}
           </button>
         </div>
       </header>
+      <StateTicker />
       <div className="war-layout">
         <aside className="war-intro">
-          <h1>
-            MINAS
-            <br />É O NOSSO
-            <br />
-            <em>TERRITÓRIO.</em>
-          </h1>
-          <p>
-            A rivalidade sai das arquibancadas e chega ao mapa. Encontre sua cidade. Conheça o campo
-            da próxima disputa.
-          </p>
-          <div className="intro-rule" />
-          <div className="intro-number">
-            <strong>853</strong>
-            <span>
-              municípios.
-              <br />
-              Uma paixão em comum.
-            </span>
-          </div>
-          <div className="club-colors" aria-label="Cruzeiro, Atlético Mineiro e América Mineiro">
-            <i />
-            <i />
-            <i />
-          </div>
-          <span className="intro-caption">TRÊS TORCIDAS. UM ESTADO INTEIRO.</span>
+          <ActivityFeed game={game} />
         </aside>
+        {tab === "map" && (
+          <button className="activity-mobile-button" onClick={() => setActivityOpen(true)}>
+            <Activity size={15} /> Atividade em Minas{" "}
+            <span>
+              {game.world?.captures.filter((c) => c.season === game.world!.season).length ?? 0}
+            </span>
+          </button>
+        )}
         <section
           className="war-main"
           aria-label="Mapa territorial de Minas Gerais"
@@ -147,10 +145,10 @@ function Index() {
             {CLUBS.map((club) => (
               <span key={club.id}>
                 <ClubCrest club={club.id} />
-                {club.initials}
+                {club.name}
               </span>
             ))}
-            <span>≈ 500 m</span>
+            <span className="legend-scale">Células ≈ 500 m</span>
           </div>
         </section>
         {tab !== "map" && (
@@ -202,6 +200,21 @@ function Index() {
           </button>
         ))}
       </nav>
+      <Dialog.Root open={activityOpen} onOpenChange={setActivityOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="game-dialog-overlay" />
+          <Dialog.Content className="game-dialog activity-dialog">
+            <Dialog.Title className="sr-only">Atividade em Minas Gerais</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Conquistas recentes desta temporada neste navegador.
+            </Dialog.Description>
+            <Dialog.Close className="dialog-close" aria-label="Fechar atividade">
+              <X size={20} />
+            </Dialog.Close>
+            <ActivityFeed game={game} />
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
       <PlayerDialog open={dialog} onOpenChange={setDialog} game={game} />
       {toast && (
         <div className="game-toast" role="status">

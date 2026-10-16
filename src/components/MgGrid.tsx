@@ -212,6 +212,7 @@ export function MgGrid(props: Props) {
   const [attempt, setAttempt] = useState(0);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [stateNotice, setStateNotice] = useState("");
   const boxRef = useRef<HTMLDivElement>(null);
   const [tip, setTip] = useState<Tip | null>(null);
 
@@ -709,6 +710,33 @@ export function MgGrid(props: Props) {
           </span>
         )}
         <div ref={boxRef} className="absolute left-3 top-3 z-20 w-64 max-w-[calc(100%-1.5rem)]">
+          <label className="state-explorer">
+            <span>Explorar estado</span>
+            <select
+              aria-label="Explorar estado"
+              value="MG"
+              onChange={(e) => {
+                if (e.target.value !== "MG")
+                  setStateNotice(
+                    "Apenas Minas Gerais está disponível. Os demais estados serão liberados depois.",
+                  );
+                else setStateNotice("");
+              }}
+            >
+              <option value="MG">Minas Gerais · disponível</option>
+              <option value="SP">São Paulo · em breve</option>
+              <option value="RJ">Rio de Janeiro · em breve</option>
+              <option value="RS">Rio Grande do Sul · em breve</option>
+            </select>
+          </label>
+          {stateNotice && (
+            <div className="state-notice" role="status">
+              {stateNotice}
+              <button aria-label="Fechar aviso de estado" onClick={() => setStateNotice("")}>
+                <X size={14} />
+              </button>
+            </div>
+          )}
           <div className="flex min-h-11 items-center gap-2 rounded-lg border bg-popover px-3 py-2 shadow-md">
             <svg
               xmlns="http://www.w3.org/2000/svg"

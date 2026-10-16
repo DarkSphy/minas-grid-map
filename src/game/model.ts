@@ -31,6 +31,8 @@ export type Player = {
   joinedAt: number;
   clubs: Record<string, ClubId>;
   lastActionDay: string | null;
+  avatar?: string | null | undefined;
+  readNotifications?: string[] | undefined;
 };
 export type Cell = {
   id: string;
@@ -41,7 +43,11 @@ export type Cell = {
   lon: number;
 };
 export type Territory = Cell & { club: ClubId; playerId: string; claimedAt: number };
-export type Capture = Territory & { season: number };
+export type Capture = Territory & {
+  season: number;
+  previousPlayerId?: string | undefined;
+  previousClub?: ClubId | undefined;
+};
 export type RankingRow = { club: ClubId; count: number; position: number };
 export type SeasonSummary = {
   number: number;
@@ -158,7 +164,15 @@ export function captureCell(world: World, playerId: string, cell: Cell, now: num
     ...world,
     territories: { ...world.territories, [cell.id]: territory },
     players: { ...world.players, [playerId]: { ...player, lastActionDay: dayInBrasilia(now) } },
-    captures: [...world.captures, { ...territory, season: world.season }],
+    captures: [
+      ...world.captures,
+      {
+        ...territory,
+        season: world.season,
+        previousPlayerId: world.territories[cell.id]?.playerId,
+        previousClub: world.territories[cell.id]?.club,
+      },
+    ],
   };
 }
 export function countdown(milliseconds: number) {
@@ -183,4 +197,23 @@ export function municipalRankings(
     grouped.set(territory.mun, cells);
   }
   return new Map([...grouped].map(([name, cells]) => [name, ranking(cells)]));
+}
+
+export function validAvatar(value: string) {
+  return (
+    value.length <= 180000 && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(value)
+  );
+}
+export function updateAvatar(world: World, playerId: string, avatar: string | null): World {
+  const player = world.players[playerId];
+  if (!player) throw new Error("Entre para alterar sua foto.");
+  if (avatar !== null && !validAvatar(avatar))
+    throw new Error("Foto inválida. Escolha uma imagem PNG, JPG ou WebP.");
+  return { ...world, players: { ...world.players, [playerId]: { ...player, avatar } } };
+}
+export function markNotificationsRead(world: World, playerId: string, ids: string[]): World {
+  const player = world.players[playerId];
+  if (!player) throw new Error("Entre para ler suas notificações.");
+  const readNotifications = [...new Set([...(player.readNotifications ?? []), ...ids])].slice(-500);
+  return { ...world, players: { ...world.players, [playerId]: { ...player, readNotifications } } };
 }

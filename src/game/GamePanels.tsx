@@ -10,6 +10,7 @@ import {
   seasonEnds,
   type RankingRow,
 } from "./model";
+import { AvatarInput } from "./AvatarInput";
 import { ClubCrest } from "./ClubCrest";
 import type { Game } from "./use-game";
 
@@ -184,13 +185,28 @@ export function GamePanel({
                   className="player-avatar"
                   style={{ background: club ? clubById(club).color : "#294239" }}
                 >
-                  {club ? <ClubCrest club={club} /> : player.name[0]?.toUpperCase()}
+                  {player.avatar ? (
+                    <img
+                      className="profile-photo"
+                      src={player.avatar}
+                      alt={`Foto de ${player.name}`}
+                    />
+                  ) : club ? (
+                    <ClubCrest club={club} />
+                  ) : (
+                    player.name[0]?.toUpperCase()
+                  )}
                 </span>
                 <div>
                   <h3>{player.name}</h3>
                   <span>{club ? clubById(club).name : "Escolha seu clube nesta temporada"}</span>
                 </div>
               </div>
+              <AvatarInput
+                value={player.avatar ?? null}
+                disabled={game.pending}
+                onChange={game.setAvatar}
+              />
               {!club && (
                 <button className="war-primary" onClick={openClubs}>
                   ESCOLHER MEU CLUBE <Shield size={18} />
@@ -272,6 +288,8 @@ export function PlayerDialog({
   const [register, setRegister] = useState(false);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const selecting = !!game.player && !game.club;
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -311,8 +329,9 @@ export function PlayerDialog({
               onSubmit={async (e) => {
                 e.preventDefault();
                 if (!password) return;
-                if (await game.login(name)) {
+                if (await game.login(name, avatar)) {
                   setPassword("");
+                  setAvatar(null);
                   if (
                     game.world?.players[
                       `demo:${name.trim().replace(/\s+/g, " ").slice(0, 48).toLocaleLowerCase("pt-BR")}`
@@ -322,6 +341,12 @@ export function PlayerDialog({
                 }
               }}
             >
+              <AvatarInput
+                value={avatar}
+                onChange={setAvatar}
+                onBusyChange={setPhotoBusy}
+                disabled={game.pending}
+              />
               <label className="game-field">
                 Nome ou apelido
                 <input
@@ -345,7 +370,7 @@ export function PlayerDialog({
                   placeholder="Qualquer valor — não use sua senha real"
                 />
               </label>
-              <button className="war-primary" disabled={game.pending || !game.ready}>
+              <button className="war-primary" disabled={game.pending || !game.ready || photoBusy}>
                 {game.pending ? "ENTRANDO…" : register ? "CRIAR PERFIL DE TESTE" : "ENTRAR"}
                 <ArrowUpRight size={18} />
               </button>
