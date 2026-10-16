@@ -91,7 +91,7 @@ export function MgGrid() {
   const view = useRef({ scale: 1, ox: 0, oy: 0 });
   const hover = useRef<{ c: number; r: number } | null>(null);
   const hoverMun = useRef<Mun | null>(null);
-  const [tip, setTip] = useState<{ x: number; y: number; c: number; r: number; lat: number; lon: number; mun?: string } | null>(null);
+  const [tip, setTip] = useState<{ x: number; y: number; c: number; r: number; lat: number; lon: number; mun?: string | undefined } | null>(null);
 
   useEffect(() => { buildGrid().then(setGrid); }, []);
 
