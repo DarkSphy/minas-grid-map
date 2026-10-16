@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Minus, Maximize, X, MapPin } from "lucide-react";
+import { CLUBS, clubById, type Cell, type ClubId, type Territory } from "@/game/model";
 
 type Tip = {
   x: number;
@@ -166,8 +167,28 @@ async function buildGrid(): Promise<Grid> {
   return { cols, rows, mask, maskCanvas: c, outline, minLon, maxLat, mPerDegLon, total, muns };
 }
 
-export function MgGrid() {
+type Props = {
+  territories?: Record<string, Territory> | undefined;
+  playerClub: ClubId | null;
+  available: boolean;
+  pending: boolean;
+  ready: boolean;
+  onCapture: (cell: Cell) => Promise<void>;
+  onMunicipalityChange: (city: string) => void;
+  onMunicipalities: (cities: string[]) => void;
+  onMunicipalRanking: () => void;
+};
+export function MgGrid(props: Props) {
+  const { onMunicipalities } = props;
   const wrap = useRef<HTMLDivElement>(null);
+  const callbacks = useRef(props);
+  callbacks.current = props;
+  const ownershipLayer = useRef<HTMLCanvasElement | null>(null);
+  const aggregateLayer = useRef<HTMLCanvasElement | null>(null);
+  const aggregateShown = useRef(false);
+  const [aggregated, setAggregated] = useState(false);
+  const pulse = useRef<{ c: number; r: number; at: number } | null>(null);
+  const previousOwners = useRef<Record<string, Territory> | undefined>(undefined);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [grid, setGrid] = useState<Grid | null>(null);
   const view = useRef({ scale: 1, ox: 0, oy: 0 });
@@ -203,6 +224,7 @@ export function MgGrid() {
     const s = Math.min(60, Math.max(0.1, Math.min(w / (m.bw * 1.6), h / (m.bh * 1.6))));
     view.current = { scale: s, ox: w / 2 - m.cx * s, oy: h / 2 - m.cy * s };
     focusMun.current = m;
+    callbacks.current.onMunicipalityChange(m.name);
     hover.current = null;
     hoverMun.current = null;
     setTip(null);
@@ -262,6 +284,26 @@ export function MgGrid() {
       const { scale: s, ox, oy } = view.current;
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(grid.maskCanvas, ox, oy, grid.cols * s, grid.rows * s);
+      const grouped = s < 2;
+      if (aggregateShown.current !== grouped) {
+        aggregateShown.current = grouped;
+        setAggregated(grouped);
+      }
+      if (grouped && aggregateLayer.current) {
+        ctx.save();
+        ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
+        ctx.clip(grid.outline, "evenodd");
+        ctx.globalAlpha = 0.85;
+        ctx.drawImage(
+          aggregateLayer.current,
+          0,
+          0,
+          aggregateLayer.current.width * 32,
+          aggregateLayer.current.height * 32,
+        );
+        ctx.restore();
+      } else if (ownershipLayer.current)
+        ctx.drawImage(ownershipLayer.current, ox, oy, grid.cols * s, grid.rows * s);
       if (s >= 6) {
         const c0 = Math.max(0, Math.floor(-ox / s)),
           c1 = Math.min(grid.cols, Math.ceil((w - ox) / s));
@@ -347,6 +389,22 @@ export function MgGrid() {
         ctx.strokeStyle = colors.border;
         ctx.lineWidth = 1.5;
         ctx.strokeRect(x, y, sz, sz);
+      }
+      const flash = pulse.current;
+      if (flash) {
+        const elapsed = performance.now() - flash.at;
+        if (elapsed < 650) {
+          const progress = elapsed / 650,
+            radius = Math.max(s / 2, 9) + progress * 20;
+          ctx.strokeStyle = "#f6df20";
+          ctx.globalAlpha = 1 - progress;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(ox + (flash.c + 0.5) * s, oy + (flash.r + 0.5) * s, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          drawRef.current();
+        } else pulse.current = null;
       }
     };
     let frame = 0;
@@ -571,6 +629,67 @@ export function MgGrid() {
     };
   }, [grid]);
 
+  useEffect(() => {
+    if (!grid) return;
+    onMunicipalities(grid.muns.map((m) => m.name).sort((a, b) => a.localeCompare(b, "pt-BR")));
+  }, [grid, onMunicipalities]);
+  useEffect(() => {
+    if (selected?.mun) callbacks.current.onMunicipalityChange(selected.mun);
+  }, [selected]);
+  useEffect(() => {
+    if (!grid) return;
+    const layer = ownershipLayer.current ?? document.createElement("canvas");
+    layer.width = grid.cols;
+    layer.height = grid.rows;
+    const ctx = layer.getContext("2d")!;
+    const aggregate = document.createElement("canvas");
+    aggregate.width = Math.ceil(grid.cols / 32);
+    aggregate.height = Math.ceil(grid.rows / 32);
+    const grouped = new Map<number, number[]>();
+    for (const territory of Object.values(props.territories ?? {})) {
+      if (
+        territory.c >= grid.cols ||
+        territory.r >= grid.rows ||
+        !grid.mask[territory.r * grid.cols + territory.c]
+      )
+        continue;
+      ctx.fillStyle = clubById(territory.club).color;
+      ctx.fillRect(territory.c, territory.r, 1, 1);
+      const key = Math.floor(territory.r / 32) * aggregate.width + Math.floor(territory.c / 32);
+      const counts = grouped.get(key) ?? [0, 0, 0];
+      const clubIndex = CLUBS.findIndex((club) => club.id === territory.club);
+      counts[clubIndex] = (counts[clubIndex] ?? 0) + 1;
+      grouped.set(key, counts);
+    }
+    const groupCtx = aggregate.getContext("2d")!;
+    for (const [key, counts] of grouped) {
+      const max = Math.max(...counts),
+        leaders = counts
+          .map((count, index) => (count === max ? index : -1))
+          .filter((index) => index >= 0);
+      groupCtx.fillStyle = leaders.length === 1 ? CLUBS[leaders[0]!]!.color : "#91a6a0";
+      groupCtx.fillRect(key % aggregate.width, Math.floor(key / aggregate.width), 1, 1);
+    }
+    aggregateLayer.current = aggregate;
+    ownershipLayer.current = layer;
+    const cell = selectedRef.current;
+    if (cell) {
+      const id = cell.c + "-" + cell.r,
+        owner = props.territories?.[id];
+      if (
+        owner &&
+        owner.claimedAt !== previousOwners.current?.[id]?.claimedAt &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      )
+        pulse.current = { c: cell.c, r: cell.r, at: performance.now() };
+    }
+    previousOwners.current = props.territories;
+    drawRef.current();
+  }, [grid, props.territories]);
+  const selectedOwner = selected ? props.territories?.[selected.c + "-" + selected.r] : undefined;
+  const hoverOwner = tip ? props.territories?.[tip.c + "-" + tip.r] : undefined;
+  const alreadyOurs = !!props.playerClub && selectedOwner?.club === props.playerClub;
+
   return (
     <div className="flex h-full flex-col">
       <div ref={wrap} className="relative flex-1 cursor-crosshair touch-none overflow-hidden">
@@ -606,7 +725,11 @@ export function MgGrid() {
           </button>
         </div>
         {!selected && (
-          <span className="grid-hint">Arraste para explorar · aproxime com dois dedos</span>
+          <span className="grid-hint">
+            {aggregated
+              ? "Visão agrupada · aproxime para ver os quadrados"
+              : "Arraste para explorar · aproxime com dois dedos"}
+          </span>
         )}
         <div ref={boxRef} className="absolute left-3 top-3 z-20 w-64 max-w-[calc(100%-1.5rem)]">
           <div className="flex min-h-11 items-center gap-2 rounded-lg border bg-popover px-3 py-2 shadow-md">
@@ -698,6 +821,7 @@ export function MgGrid() {
             <div className="font-semibold">
               MG · {tip.c}-{tip.r}
             </div>
+            <div>{hoverOwner ? clubById(hoverOwner.club).name : "Território neutro"}</div>
             <div>
               {tip.lat.toFixed(5)}, {tip.lon.toFixed(5)}
             </div>
@@ -733,9 +857,54 @@ export function MgGrid() {
               {selected.lon.toFixed(5)}
             </p>
             <span className="neutral">
-              <i /> Território neutro
+              <i
+                style={{
+                  background: selectedOwner ? clubById(selectedOwner.club).color : undefined,
+                }}
+              />{" "}
+              {selectedOwner ? clubById(selectedOwner.club).name : "Território neutro"}
             </span>
-            <small>As conquistas serão liberadas em uma próxima fase.</small>
+            <button
+              className="war-primary capture-button"
+              disabled={
+                !props.ready ||
+                props.pending ||
+                alreadyOurs ||
+                (!!props.playerClub && !props.available)
+              }
+              onClick={() => {
+                if (selected)
+                  void props.onCapture({
+                    id: selected.c + "-" + selected.r,
+                    c: selected.c,
+                    r: selected.r,
+                    lat: selected.lat,
+                    lon: selected.lon,
+                    mun: selected.mun ?? null,
+                  });
+              }}
+            >
+              {props.pending
+                ? "CONQUISTANDO…"
+                : alreadyOurs
+                  ? "TERRITÓRIO DA SUA TORCIDA"
+                  : props.playerClub && !props.available
+                    ? "AÇÃO DE HOJE UTILIZADA"
+                    : "CONQUISTAR TERRITÓRIO"}
+            </button>
+            {selected.mun && (
+              <button className="text-button" onClick={props.onMunicipalRanking}>
+                Ver ranking de {selected.mun}
+              </button>
+            )}
+            {aggregated && (
+              <p className="help-text">Visão agrupada. Aproxime para ver cada quadrado.</p>
+            )}
+            <small>
+              {props.playerClub
+                ? "Uma ação gratuita por dia · meia-noite de Brasília"
+                : "Entre e escolha seu clube para conquistar."}
+            </small>
           </section>
         )}
       </div>

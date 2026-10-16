@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Map, BarChart3, Trophy, UserRound, ArrowUpRight } from "lucide-react";
 import { MgGrid } from "@/components/MgGrid";
+import { useGame } from "@/game/use-game";
+import { GamePanel, PlayerDialog, RankingTable } from "@/game/GamePanels";
+import { CLUBS, clubById, ranking, type Cell } from "@/game/model";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,6 +28,27 @@ const tabs = [
 ] as const;
 function Index() {
   const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("map");
+  const game = useGame();
+  const [dialog, setDialog] = useState(false);
+  const [city, setCity] = useState("");
+  const [cities, setCities] = useState<string[]>([]);
+  const [toast, setToast] = useState("");
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(""), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+  const enter = () => {
+    game.clearError();
+    setDialog(true);
+  };
+  const capture = async (cell: Cell) => {
+    if (!game.player || !game.club) {
+      enter();
+      return;
+    }
+    if (await game.capture(cell)) setToast("Território conquistado!");
+  };
   return (
     <main className="war-app">
       <header className="war-header">
@@ -37,7 +61,17 @@ function Index() {
             height={724}
           />
         </a>
-        <span className="header-tagline">Minas Gerais</span>
+        <div className="header-account">
+          <span className="demo-caption">Demonstração local · dados deste navegador</span>
+          <button
+            className="account-button"
+            disabled={!game.ready}
+            onClick={() => (game.player ? setTab("profile") : enter())}
+          >
+            <UserRound size={16} />
+            {game.player?.name ?? "Entrar"}
+          </button>
+        </div>
       </header>
       <div className="war-layout">
         <aside className="war-intro">
@@ -74,86 +108,71 @@ function Index() {
         >
           <div className="map-heading">
             <div>
-              <span className="eyebrow">MAPA TERRITORIAL</span>
+              <span className="eyebrow">MAPA TERRITORIAL · DEMO LOCAL</span>
               <h2>
                 MINAS GERAIS<span>MG</span>
               </h2>
             </div>
+            <button
+              className="map-player-action"
+              disabled={!game.ready}
+              onClick={() => (!game.player || !game.club ? enter() : setTab("profile"))}
+            >
+              {game.club
+                ? clubById(game.club).initials +
+                  " · " +
+                  (game.available ? "1 ação hoje" : "0 ações hoje")
+                : "Escolher meu clube"}
+            </button>
           </div>
           <div className="map-stage">
-            <MgGrid />
+            <MgGrid
+              territories={game.world?.territories}
+              playerClub={game.club}
+              available={game.available}
+              pending={game.pending}
+              ready={game.ready}
+              onCapture={capture}
+              onMunicipalityChange={setCity}
+              onMunicipalities={setCities}
+              onMunicipalRanking={() => setTab("ranking")}
+            />
           </div>
           <div className="map-footer">
             <span>
               <i /> Território neutro
             </span>
-            <span>Malha atual ≈ 500 × 500 m</span>
+            {CLUBS.map((club) => (
+              <span key={club.id}>
+                <i style={{ background: club.color }} />
+                {club.initials}
+              </span>
+            ))}
+            <span>≈ 500 m</span>
           </div>
         </section>
         {tab !== "map" && (
-          <section className="war-panel" aria-labelledby="panel-title">
-            <span className="eyebrow">EM DESENVOLVIMENTO</span>
-            {tab === "ranking" && (
-              <>
-                <h2 id="panel-title">RANKING</h2>
-                <p>
-                  O ranking estadual e os rankings por cidade serão calculados a partir das
-                  conquistas reais. A disputa ainda não começou.
-                </p>
-                <div className="club-preview">
-                  <span>
-                    <i className="blue" />
-                    Cruzeiro
-                  </span>
-                  <span>
-                    <i className="black" />
-                    Atlético Mineiro
-                  </span>
-                  <span>
-                    <i className="green" />
-                    América Mineiro
-                  </span>
-                </div>
-              </>
-            )}
-            {tab === "season" && (
-              <>
-                <h2 id="panel-title">TEMPORADAS</h2>
-                <p>
-                  Temporadas de 14 dias. Um estado para disputar. A primeira temporada ainda não tem
-                  data de início.
-                </p>
-                <div className="panel-note">
-                  Primeira temporada<span>Data de início a definir.</span>
-                </div>
-              </>
-            )}
-            {tab === "profile" && (
-              <>
-                <h2 id="panel-title">SEU PERFIL</h2>
-                <p>
-                  Em breve você poderá entrar, escolher seu clube e acompanhar sua participação.
-                  Nesta primeira etapa, explore o mapa sem cadastro.
-                </p>
-                <div className="panel-note">
-                  Seu perfil estará disponível após o cadastro.
-                  <span>Login e escolha do clube chegam na próxima fase.</span>
-                </div>
-              </>
-            )}
-            <button className="war-primary" onClick={() => setTab("map")}>
-              EXPLORAR MINAS GERAIS <ArrowUpRight size={19} />
-            </button>
-          </section>
+          <GamePanel
+            tab={tab}
+            game={game}
+            city={city}
+            cities={cities}
+            setCity={setCity}
+            openLogin={enter}
+            openClubs={enter}
+            openMap={() => setTab("map")}
+          />
         )}
         <aside className="war-sidebar">
           <div className="side-card">
-            <span className="eyebrow">COMO EXPLORAR</span>
-            <h3>
-              A sua cidade
-              <br />
-              está no jogo.
-            </h3>
+            <span className="eyebrow">{city || "MINAS GERAIS"}</span>
+            <h3>{city ? "Disputa na cidade." : "O domínio do estado."}</h3>
+            {game.world && (
+              <RankingTable rows={ranking(game.world.territories, city || undefined)} />
+            )}
+            <button className="text-button" onClick={() => setTab("ranking")}>
+              Ver ranking completo
+            </button>
             <p>Busque um dos 853 municípios de Minas e aproxime para explorar cada quadrado.</p>
             <div className="side-steps">
               <span>
@@ -181,6 +200,18 @@ function Index() {
           </button>
         ))}
       </nav>
+      <PlayerDialog open={dialog} onOpenChange={setDialog} game={game} />
+      {toast && (
+        <div className="game-toast" role="status">
+          {toast}
+        </div>
+      )}
+      {game.error && !dialog && (
+        <div className="global-error" role="alert">
+          {game.error}
+          <button onClick={game.clearError}>Fechar</button>
+        </div>
+      )}
     </main>
   );
 }

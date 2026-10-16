@@ -50,7 +50,7 @@ npm run dev
 
 ## Soccer War Brasil — Fase 1
 
-A interface inicial mantém a integração Lovable, o Canvas e a grade geográfica existente. Inclui navegação Mapa/Ranking/Temporada/Perfil, busca municipal, zoom por pinça e botões, navegação por teclado e seleção de célula com painel inferior. As outras abas informam o escopo futuro; não exibem rankings simulados. Autenticação, conquistas, limite diário e temporadas ativas ainda não foram implementados.
+A interface inicial mantém a integração Lovable, o Canvas e a grade geográfica existente. Inclui navegação Mapa/Ranking/Temporada/Perfil, busca municipal, zoom por pinça e botões, navegação por teclado e seleção de célula com painel inferior. Essa primeira entrega foi ampliada pelo MVP jogável local descrito abaixo. A autenticação real e o multiplayer compartilhado continuam dependendo do backend.
 
 A marca usa diretamente o PNG transparente fornecido pelo proprietário, preservando mapa pincelado, bola, nome e slogan. O arquivo original fica em `public/assets/soccer-war-logo.png`.
 
@@ -71,3 +71,40 @@ Antes de sincronizar: executar build, TypeScript e testes; verificar mudanças r
 ### Ajustes de dimensionamento
 
 A linha central do layout ocupa somente a altura disponível entre o cabeçalho e a navegação. Painéis e colunas têm rolagem interna com cores do site; em telas baixas, o conteúdo continua acessível sem ficar encoberto. O selo decorativo de pré-temporada foi removido.
+
+## MVP jogável em modo local
+
+Esta versão permite testar o ciclo inteiro sem configurar Lovable Cloud ou Supabase:
+
+1. Clique em **Entrar**, use qualquer nome e qualquer senha de teste. A opção de criar perfil utiliza o mesmo fluxo local. Nenhuma senha é salva ou enviada.
+2. Escolha Cruzeiro, Atlético Mineiro ou América Mineiro. O clube fica vinculado à temporada.
+3. Busque uma cidade, aproxime o mapa, toque em um quadrado e confirme a conquista.
+4. Confira a alteração da cor, o saldo de ações, o perfil e os rankings estadual e municipal.
+5. Para testar uma torcida rival, saia pelo perfil e entre com outro nome. As abas do mesmo navegador compartilham o mundo, mas cada aba mantém sua própria sessão.
+
+### Regras demonstráveis
+
+- Uma ação por jogador por dia, renovada à meia-noite de Brasília. Não há regra de adjacência.
+- Células neutras e rivais podem ser conquistadas; repintar um território do próprio clube não consome ação.
+- Ranking considera o proprietário atual, enquanto o perfil mantém o histórico de conquistas realizadas.
+- Temporadas locais de 14 dias a partir da primeira abertura neste navegador. Ao encerrar, a classificação final é arquivada, os territórios ficam neutros e cada jogador escolhe seu clube novamente.
+- Empates são exibidos sem inventar um campeão único. Temporadas vazias não têm campeão.
+- No zoom afastado, as cores são agrupadas em blocos de exibição de 32 × 32 células, com o clube predominante e cinza para empate. Isso não muda os IDs, a resolução geográfica ou a contagem dos territórios. Ao aproximar, aparecem as células individuais.
+
+### Organização e persistência
+
+- `src/game/model.ts`: regras puras e cálculos de ranking, ação diária e temporadas.
+- `src/game/repository.ts`: contrato das operações e adaptador local; validação do formato salvo e bloqueio de escrita entre abas quando Web Locks está disponível.
+- `src/game/use-game.ts`: sessão, comandos e sincronização da interface.
+- `src/game/GamePanels.tsx`: entrada, escolha de clube, rankings, temporada e perfil.
+- `src/game/model.test.ts`: testes das regras de domínio.
+
+O localStorage guarda somente células conquistadas, perfis e histórico. A sessão da aba usa sessionStorage. O namespace é `soccer-war:demo:v1`, separado de integrações futuras; limpar os dados do navegador apaga a demonstração. Senhas não fazem parte do contrato de armazenamento. Erros de gravação são exibidos e não confirmam uma conquista que não foi salva.
+
+### Conectar o backend depois
+
+O modo atual é uma demonstração local, não autenticação ou multiplayer de produção. Pessoas em dispositivos diferentes não compartilham conquistas, e nome, relógio e dados locais podem ser modificados pelo visitante. Abra o mesmo nome para recuperar o perfil local, independentemente da senha informada.
+
+Para produção, implementar as operações do repositório com autenticação real e chamadas ao servidor. A conquista deve ser uma transação atômica que valida usuário, clube da temporada, célula geográfica válida, disponibilidade diária e temporada ativa usando o relógio do servidor. O servidor deve derivar o município dos dados oficiais; não confiar nas coordenadas, clube ou município enviados pelo navegador. Adicionar políticas de acesso, restrições únicas, consultas de territórios por área visível, agregação de rankings, histórico e notificações de atualização. A interface não deve baixar todas as conquistas nacionais.
+
+O contrato geográfico definitivo (projeção, origem fixa, IDs versionados e política de divisas) continua pendente antes de salvar conquistas reais. As conquistas locais usam `mg-legacy-v1` e não devem ser migradas automaticamente para produção. Não configure nem publique este login simulado como autenticação real.
