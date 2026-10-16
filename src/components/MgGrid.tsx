@@ -91,7 +91,37 @@ export function MgGrid() {
   const view = useRef({ scale: 1, ox: 0, oy: 0 });
   const hover = useRef<{ c: number; r: number } | null>(null);
   const hoverMun = useRef<Mun | null>(null);
+  const focusMun = useRef<Mun | null>(null);
+  const drawRef = useRef<() => void>(() => {});
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
   const [tip, setTip] = useState<{ x: number; y: number; c: number; r: number; lat: number; lon: number; mun?: string | undefined } | null>(null);
+
+  const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const results = grid && query.trim()
+    ? grid.muns.filter((m) => norm(m.name).includes(norm(query.trim()))).slice(0, 10)
+    : [];
+
+  const flyTo = (m: Mun) => {
+    const el = wrap.current;
+    if (!el) return;
+    const w = el.clientWidth, h = el.clientHeight;
+    const s = Math.min(60, Math.max(0.1, Math.min(w / (m.bw * 1.6), h / (m.bh * 1.6))));
+    view.current = { scale: s, ox: w / 2 - m.cx * s, oy: h / 2 - m.cy * s };
+    focusMun.current = m;
+    setOpen(false);
+    setQuery(m.name);
+    drawRef.current();
+  };
+
+  useEffect(() => {
+    const onDocDown = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocDown);
+    return () => document.removeEventListener("mousedown", onDocDown);
+  }, []);
 
   useEffect(() => { buildGrid().then(setGrid); }, []);
 
@@ -129,7 +159,17 @@ export function MgGrid() {
         ctx.stroke(m.path);
       }
       if (hoverMun.current) { ctx.lineWidth = 2.5 / s; ctx.strokeStyle = colors.border; ctx.stroke(hoverMun.current.path); }
+      if (focusMun.current && focusMun.current !== hoverMun.current) { ctx.lineWidth = 3 / s; ctx.strokeStyle = colors.border; ctx.stroke(focusMun.current.path); }
       ctx.restore();
+      if (focusMun.current && focusMun.current !== hoverMun.current) {
+        const fx = ox + focusMun.current.cx * s, fy = oy + focusMun.current.cy * s;
+        if (fx > -60 && fy > -20 && fx < w + 60 && fy < h + 20) {
+          ctx.font = "600 13px ui-sans-serif, system-ui, sans-serif";
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.lineWidth = 3; ctx.strokeStyle = colors.halo; ctx.fillStyle = colors.label;
+          ctx.strokeText(focusMun.current.name, fx, fy); ctx.fillText(focusMun.current.name, fx, fy);
+        }
+      }
       // labels (only if they fit, no overlap)
       ctx.font = "500 11px ui-sans-serif, system-ui, sans-serif";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -154,6 +194,7 @@ export function MgGrid() {
         ctx.strokeStyle = colors.border; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, sz, sz);
       }
     };
+    drawRef.current = draw;
 
     const fit = () => {
       const w = el.clientWidth, h = el.clientHeight;
@@ -164,7 +205,9 @@ export function MgGrid() {
     fit();
 
     let drag: { x: number; y: number } | null = null;
+    const inBox = (t: EventTarget | null) => !!boxRef.current?.contains(t as Node);
     const onMove = (e: PointerEvent) => {
+      if (inBox(e.target) && !drag) return;
       const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
       if (drag) {
@@ -185,6 +228,7 @@ export function MgGrid() {
       draw();
     };
     const onDown = (e: PointerEvent) => {
+      if (inBox(e.target)) return;
       const rect = el.getBoundingClientRect();
       drag = { x: e.clientX - rect.left, y: e.clientY - rect.top };
       el.setPointerCapture(e.pointerId);
@@ -192,6 +236,7 @@ export function MgGrid() {
     const onUp = () => { drag = null; };
     const onLeave = () => { hover.current = null; hoverMun.current = null; setTip(null); draw(); };
     const onWheel = (e: WheelEvent) => {
+      if (inBox(e.target)) return;
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
@@ -228,6 +273,49 @@ export function MgGrid() {
       </div>
       <div ref={wrap} className="relative flex-1 cursor-crosshair touch-none overflow-hidden rounded-xl border bg-card">
         <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
+        <div ref={boxRef} className="absolute left-3 top-3 z-20 w-64 max-w-[calc(100%-1.5rem)]">
+          <div className="flex items-center gap-2 rounded-md border bg-popover px-2.5 py-1.5 shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-muted-foreground">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              onKeyDown={(e) => { if (e.key === "Enter" && results[0]) flyTo(results[0]); if (e.key === "Escape") setOpen(false); }}
+              placeholder="Buscar município…"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => { setQuery(""); setOpen(false); focusMun.current = null; drawRef.current(); }}
+                aria-label="Limpar busca"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-4 w-4"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            )}
+          </div>
+          {open && query.trim() && (
+            <div className="mt-1 max-h-64 overflow-auto rounded-md border bg-popover py-1 shadow-lg">
+              {results.length === 0 ? (
+                <div className="px-2.5 py-1.5 text-sm text-muted-foreground">Nenhum município encontrado</div>
+              ) : (
+                results.map((m) => (
+                  <button
+                    key={m.name}
+                    type="button"
+                    onClick={() => flyTo(m)}
+                    className="block w-full px-2.5 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {m.name}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
         {tip && (
           <div
             className="pointer-events-none absolute z-10 rounded-md bg-popover px-2.5 py-1.5 font-mono text-xs text-popover-foreground shadow-lg"
