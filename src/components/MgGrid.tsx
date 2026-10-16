@@ -165,6 +165,8 @@ export function MgGrid() {
         const fx = ox + focusMun.current.cx * s, fy = oy + focusMun.current.cy * s;
         if (fx > -60 && fy > -20 && fx < w + 60 && fy < h + 20) {
           ctx.font = "600 13px ui-sans-serif, system-ui, sans-serif";
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.lineWidth = 3; ctx.strokeStyle = colors.halo; ctx.fillStyle = colors.label;
           ctx.strokeText(focusMun.current.name, fx, fy); ctx.fillText(focusMun.current.name, fx, fy);
         }
       }
