@@ -1,24 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { MgGrid } from "@/components/MgGrid";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Malha de Minas Gerais — 500 m × 500 m" },
+      { name: "description", content: "Mapa interativo de Minas Gerais com grade de quadrados de 500 m." },
+      { property: "og:title", content: "Malha de Minas Gerais — 500 m × 500 m" },
+      { property: "og:description", content: "Mapa interativo de Minas Gerais com grade de quadrados de 500 m." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="flex h-screen flex-col gap-4 p-4 md:p-6">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">Minas Gerais · malha de pixels</h1>
+        <p className="text-sm text-muted-foreground">Cada quadrado representa ~500 × 500 m do território real.</p>
+      </header>
+      <div className="min-h-0 flex-1">
+        <MgGrid />
+      </div>
+    </main>
   );
 }
