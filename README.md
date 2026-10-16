@@ -47,3 +47,23 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Soccer War Brasil — Fase 1
+
+A interface inicial mantém a integração Lovable, o Canvas e a grade geográfica existente. Inclui navegação Mapa/Ranking/Temporada/Perfil, busca municipal, zoom por pinça e botões, navegação por teclado e seleção de célula com painel inferior. As outras abas informam o escopo futuro; não exibem rankings simulados. Autenticação, conquistas, limite diário e temporadas ativas ainda não foram implementados.
+
+A marca usa um recorte de exibição via CSS da referência original fornecida pelo proprietário, preservando mapa pincelado, bola, nome e slogan. O arquivo original fica em `public/assets/soccer-war-brand-reference.png`.
+
+A resolução aproximada e os IDs da grade foram preservados. A projeção, a origem fixa e a política de fronteiras precisam ser definidas antes de persistir conquistas.
+
+### Verificação manual da interface
+
+- Em celular, buscar Vespasiano, aproximar por pinça e tocar em uma célula: conferir cidade, ID e coordenadas no painel.
+- Arrastar e executar pinça: nenhum gesto deve abrir o painel por engano.
+- Fechar o painel, usar os botões de zoom e enquadrar Minas Gerais.
+- Alternar as quatro abas e retornar ao mapa: manter navegação funcional e nenhum ranking fictício.
+- Com o Canvas focado: setas movem, +/- aproximam/afastam, Enter seleciona o centro, 0 enquadra e Escape fecha.
+- Testar telas de 320 px, 390 px e desktop; verificar foco, contraste, ausência de rolagem horizontal e área útil do mapa.
+- Simular falha na requisição dos dados: apresentar erro e permitir tentar novamente.
+
+Antes de sincronizar: executar build, TypeScript e testes; verificar mudanças remotas, integrar a branch revisada à branch ativa do Lovable e confirmar o commit no editor. Não reescrever o histórico publicado.
