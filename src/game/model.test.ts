@@ -8,6 +8,7 @@ import {
   loginPlayer,
   nextFreeAction,
   ranking,
+  municipalRankings,
   rollSeason,
   seasonEnds,
   SEASON_LENGTH,
@@ -100,5 +101,39 @@ describe("local game rules", () => {
   it("rejects inconsistent cell identifiers", () => {
     const { world, id } = setup();
     expect(() => captureCell(world, id, { ...cell, id: "bad" }, now)).toThrow("inválido");
+  });
+});
+
+describe("municipal ownership index", () => {
+  it("uses total city ownership rather than the hovered cell owner", () => {
+    const { world, id } = setup();
+    const first = captureCell(world, id, cell, now);
+    const second = captureCell(
+      first,
+      id,
+      { ...cell, id: "1499-1212", c: 1499 },
+      nextFreeAction(now),
+    );
+    const rival = loginPlayer(second, "Rival", now);
+    const chosen = chooseClub(rival.world, rival.id, "atletico");
+    const mixed = captureCell(chosen, rival.id, { ...cell, id: "1500-1212", c: 1500 }, now);
+    const rows = municipalRankings(mixed.territories).get("Vespasiano")!;
+    expect(rows[0]).toEqual({ club: "cruzeiro", count: 2, position: 1 });
+    expect(rows.find((row) => row.club === "atletico")?.count).toBe(1);
+    expect(municipalRankings(mixed.territories).has("Belo Horizonte")).toBe(false);
+  });
+  it("preserves municipal ties and excludes unknown municipalities", () => {
+    const { world, id } = setup();
+    const first = captureCell(world, id, cell, now);
+    const rival = loginPlayer(first, "Rival", now);
+    const chosen = chooseClub(rival.world, rival.id, "atletico");
+    const mixed = captureCell(chosen, rival.id, { ...cell, id: "1499-1212", c: 1499 }, now);
+    const rows = municipalRankings(mixed.territories).get("Vespasiano")!;
+    expect(rows.filter((row) => row.position === 1 && row.count > 0)).toHaveLength(2);
+    const unassigned = {
+      ...mixed.territories,
+      ["0-0"]: { ...mixed.territories[cell.id]!, id: "0-0", c: 0, r: 0, mun: null },
+    };
+    expect(municipalRankings(unassigned).size).toBe(1);
   });
 });

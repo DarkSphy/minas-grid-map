@@ -1,7 +1,25 @@
 export const CLUBS = [
-  { id: "cruzeiro", name: "Cruzeiro", color: "#1464ff", initials: "CRU" },
-  { id: "atletico", name: "Atlético Mineiro", color: "#30363c", initials: "CAM" },
-  { id: "america", name: "América Mineiro", color: "#00bd70", initials: "AME" },
+  {
+    id: "cruzeiro",
+    name: "Cruzeiro",
+    color: "#1464ff",
+    crest: "/assets/clubs/cruzeiro.png",
+    initials: "CRU",
+  },
+  {
+    id: "atletico",
+    name: "Atlético Mineiro",
+    color: "#30363c",
+    crest: "/assets/clubs/atletico.svg",
+    initials: "CAM",
+  },
+  {
+    id: "america",
+    name: "América Mineiro",
+    color: "#00bd70",
+    crest: "/assets/clubs/america.png",
+    initials: "AME",
+  },
 ] as const;
 export type ClubId = (typeof CLUBS)[number]["id"];
 export const clubById = (id: ClubId) => CLUBS.find((club) => club.id === id)!;
@@ -151,4 +169,18 @@ export function countdown(milliseconds: number) {
   s %= 3600;
   const m = Math.floor(s / 60);
   return `${d ? `${d}d ` : ""}${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+
+/** Index ownership once when territories change, keeping hover independent of total territory count. */
+export function municipalRankings(
+  territories: Record<string, Territory>,
+): Map<string, RankingRow[]> {
+  const grouped = new Map<string, Record<string, Territory>>();
+  for (const territory of Object.values(territories)) {
+    if (!territory.mun) continue;
+    const cells = grouped.get(territory.mun) ?? {};
+    cells[territory.id] = territory;
+    grouped.set(territory.mun, cells);
+  }
+  return new Map([...grouped].map(([name, cells]) => [name, ranking(cells)]));
 }

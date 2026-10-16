@@ -108,3 +108,17 @@ O modo atual é uma demonstração local, não autenticação ou multiplayer de 
 Para produção, implementar as operações do repositório com autenticação real e chamadas ao servidor. A conquista deve ser uma transação atômica que valida usuário, clube da temporada, célula geográfica válida, disponibilidade diária e temporada ativa usando o relógio do servidor. O servidor deve derivar o município dos dados oficiais; não confiar nas coordenadas, clube ou município enviados pelo navegador. Adicionar políticas de acesso, restrições únicas, consultas de territórios por área visível, agregação de rankings, histórico e notificações de atualização. A interface não deve baixar todas as conquistas nacionais.
 
 O contrato geográfico definitivo (projeção, origem fixa, IDs versionados e política de divisas) continua pendente antes de salvar conquistas reais. As conquistas locais usam `mg-legacy-v1` e não devem ser migradas automaticamente para produção. Não configure nem publique este login simulado como autenticação real.
+
+## Escudos, paisagem e consulta municipal
+
+Os nomes dos municípios não são desenhados permanentemente no Canvas. A busca continua centralizando a cidade; hover no desktop e toque no celular mostram o município, o controlador da célula e a liderança municipal. A liderança usa somente células conquistadas da temporada atual: o percentual representa a participação nos territórios conquistados, não a área total do município. Empates mostram todos os líderes; cidades sem conquistas não têm líder. O índice municipal é recalculado apenas quando muda o conjunto de territórios.
+
+Os escudos são arquivos originais obtidos das páginas oficiais, salvos localmente para não depender de hotlink:
+
+- Cruzeiro: imagem PNG circular embutida no cabeçalho de https://www.cruzeiro.com.br/ (72 × 72).
+- Atlético: https://atletico.com.br/wp-content/uploads/2022/01/atletico.svg, referenciado no site oficial https://atletico.com.br/.
+- América: https://irp.cdn-website.com/05448cb5/dms3rep/multi/Logo.png, referenciado em https://www.americafc.com.br/.
+
+Arquivos em `public/assets/clubs/`; os emblemas não foram redesenhados. `src/game/ClubCrest.tsx` centraliza a apresentação dos escudos e do resumo municipal. As marcas continuam pertencendo aos respectivos clubes.
+
+A paisagem decorativa `public/assets/minas-evening.webp` foi gerada para este projeto: composição inspirada nas serras e na arquitetura colonial mineira, sem pretensão de fotografia geográfica documental. A versão WebP tem aproximadamente 185 kB. O fundo é independente do Canvas e usa camadas escuras; a grade, os IDs, os limites estaduais e as cores das conquistas permanecem intactos. No celular, o painel de consulta ocupa no máximo 56% da área do mapa e permite rolagem interna.

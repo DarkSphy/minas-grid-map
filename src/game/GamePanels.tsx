@@ -10,6 +10,7 @@ import {
   seasonEnds,
   type RankingRow,
 } from "./model";
+import { ClubCrest } from "./ClubCrest";
 import type { Game } from "./use-game";
 
 export function RankingTable({ rows }: { rows: RankingRow[] }) {
@@ -21,9 +22,7 @@ export function RankingTable({ rows }: { rows: RankingRow[] }) {
         return (
           <div className="ranking-row" key={row.club}>
             <span className="rank-position">{row.position}</span>
-            <span className="club-emblem" style={{ background: club.color }}>
-              {club.initials}
-            </span>
+            <ClubCrest club={club.id} />
             <div>
               <strong>{club.name}</strong>
               <div className="rank-track">
@@ -126,7 +125,7 @@ export function GamePanel({
               <span>territórios controlados</span>
             </div>
             <div>
-              <b>{leaders.length === 1 ? clubById(leaders[0]!.club).initials : "—"}</b>
+              <b>{leaders.length === 1 ? <ClubCrest club={leaders[0]!.club} /> : "—"}</b>
               <span>
                 {leaders.length > 1
                   ? "liderança empatada"
@@ -185,7 +184,7 @@ export function GamePanel({
                   className="player-avatar"
                   style={{ background: club ? clubById(club).color : "#294239" }}
                 >
-                  {player.name[0]?.toUpperCase()}
+                  {club ? <ClubCrest club={club} /> : player.name[0]?.toUpperCase()}
                 </span>
                 <div>
                   <h3>{player.name}</h3>
@@ -235,10 +234,7 @@ export function GamePanel({
                   .reverse()
                   .map((capture, i) => (
                     <div className="history-row" key={`${capture.claimedAt}-${i}`}>
-                      <span
-                        className="club-dot"
-                        style={{ background: clubById(capture.club).color }}
-                      />
+                      <ClubCrest club={capture.club} className="history-crest" />
                       <div>
                         <strong>{capture.mun ?? "Divisa municipal"}</strong>
                         <span>
@@ -304,9 +300,7 @@ export function PlayerDialog({
                     if (await game.choose(club.id)) onOpenChange(false);
                   }}
                 >
-                  <span className="club-emblem" style={{ background: club.color }}>
-                    {club.initials}
-                  </span>
+                  <ClubCrest club={club.id} />
                   <strong>{club.name}</strong>
                   <ArrowUpRight size={18} />
                 </button>

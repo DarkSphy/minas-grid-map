@@ -1303,3 +1303,194 @@ button:disabled {
     margin-left: 8px;
   }
 }
+
+/* Club artwork remains intact; only object-fit controls its display. */
+.club-crest {
+  display: block;
+  width: 42px;
+  height: 46px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 3px #0005);
+}
+.club-picker .club-crest {
+  width: 54px;
+  height: 60px;
+}
+.player-avatar {
+  background: transparent !important;
+  border-radius: 0;
+}
+.player-avatar .club-crest {
+  width: 54px;
+  height: 60px;
+}
+.history-crest {
+  width: 25px;
+  height: 30px;
+}
+.game-stats .club-crest {
+  height: 38px;
+}
+.war-sidebar .club-crest {
+  width: 29px;
+  height: 34px;
+}
+.map-player-action .club-crest {
+  width: 22px;
+  height: 25px;
+}
+.map-footer .club-crest {
+  width: 17px;
+  height: 19px;
+}
+.neutral .club-crest,
+.hover-cell-owner .club-crest {
+  width: 20px;
+  height: 23px;
+}
+.hover-cell-owner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: #b2c5be;
+  font-size: 10px;
+  margin-top: 10px;
+}
+.municipal-control {
+  margin: 12px 0;
+  padding: 10px 0;
+  border-top: 1px solid #355347;
+  border-bottom: 1px solid #355347;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+.municipal-label {
+  color: #a2bdb0;
+  font-size: 9px;
+  letter-spacing: 0.035em;
+}
+.municipal-leader {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+.municipal-leader .club-crest {
+  width: 32px;
+  height: 38px;
+}
+.municipal-leader strong {
+  display: block;
+  font-size: 12px;
+}
+.municipal-leader small {
+  display: block;
+  font-size: 10px;
+  color: #a3beb1;
+  margin-top: 4px;
+}
+.municipal-control p {
+  font-size: 11px;
+  color: #b2c5be;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+.war-app {
+  background:
+    linear-gradient(90deg, #041019a8, #0410196e 55%, #04101999),
+    url("/assets/minas-evening.webp") center center / cover no-repeat,
+    #061119;
+}
+.war-header {
+  background: #030e16e8;
+}
+.map-stage {
+  background: #06171b8a;
+  box-shadow: inset 0 0 55px #0004;
+}
+.map-stage::before {
+  opacity: 0.12;
+}
+.war-intro {
+  text-shadow: 0 2px 5px #000c;
+}
+.side-card,
+.war-panel {
+  background: #071a22ed;
+}
+@media (max-width: 700px) {
+  .war-app {
+    background-position:
+      center,
+      58% center;
+  }
+  .map-stage {
+    background: #06171b75;
+  }
+  .ranking-row > .club-crest {
+    width: 34px;
+    height: 39px;
+  }
+  .territory-sheet {
+    padding: 14px 16px;
+  }
+  .municipal-control {
+    margin: 9px 0;
+    padding: 9px 0;
+  }
+}
+
+.territory-sheet {
+  max-height: min(64%, 440px);
+}
+@media (max-width: 700px) {
+  .territory-sheet {
+    max-height: min(56%, 360px);
+  }
+}
+.territory-sheet .municipal-leader small {
+  border: 0;
+  padding: 0;
+  margin-top: 3px;
+}
+.territory-sheet .capture-button {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  box-shadow: 0 0 0 8px #06151d;
+}
+.territory-sheet .sheet-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  margin: -6px -6px 0 0;
+  background: #06151d;
+  border-radius: 6px;
+  z-index: 2;
+}
+/* The logo has an explicit flex basis so its intrinsic PNG width cannot displace the account controls. */
+.war-brand {
+  flex: 0 1 310px;
+  width: 310px;
+}
+.header-account {
+  flex: 0 1 auto;
+}
+.demo-caption {
+  white-space: nowrap;
+}
+.account-button {
+  flex-shrink: 0;
+}
+@media (max-width: 1000px) {
+  .demo-caption {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .war-brand {
+    flex: 1 1 0;
+    width: auto;
+  }
+}

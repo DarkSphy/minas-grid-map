@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Map, BarChart3, Trophy, UserRound, ArrowUpRight } from "lucide-react";
 import { MgGrid } from "@/components/MgGrid";
+import { ClubCrest } from "@/game/ClubCrest";
 import { useGame } from "@/game/use-game";
 import { GamePanel, PlayerDialog, RankingTable } from "@/game/GamePanels";
 import { CLUBS, clubById, ranking, type Cell } from "@/game/model";
@@ -118,6 +119,7 @@ function Index() {
               disabled={!game.ready}
               onClick={() => (!game.player || !game.club ? enter() : setTab("profile"))}
             >
+              {game.club && <ClubCrest club={game.club} />}
               {game.club
                 ? clubById(game.club).initials +
                   " · " +
@@ -144,7 +146,7 @@ function Index() {
             </span>
             {CLUBS.map((club) => (
               <span key={club.id}>
-                <i style={{ background: club.color }} />
+                <ClubCrest club={club.id} />
                 {club.initials}
               </span>
             ))}

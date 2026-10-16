@@ -1,6 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Minus, Maximize, X, MapPin } from "lucide-react";
-import { CLUBS, clubById, type Cell, type ClubId, type Territory } from "@/game/model";
+import {
+  CLUBS,
+  clubById,
+  municipalRankings,
+  type Cell,
+  type ClubId,
+  type Territory,
+} from "@/game/model";
+
+import { ClubCrest, MunicipalControl } from "@/game/ClubCrest";
 
 type Tip = {
   x: number;
@@ -272,7 +281,6 @@ export function MgGrid(props: Props) {
       halo: css("--card"),
     };
 
-    const labelOrder = [...grid.muns].sort((a, b) => b.bw * b.bh - a.bw * a.bh);
     const draw = () => {
       const dpr = window.devicePixelRatio || 1;
       const w = el.clientWidth,
@@ -344,41 +352,6 @@ export function MgGrid(props: Props) {
         ctx.stroke(focusMun.current.path);
       }
       ctx.restore();
-      if (focusMun.current && focusMun.current !== hoverMun.current) {
-        const fx = ox + focusMun.current.cx * s,
-          fy = oy + focusMun.current.cy * s;
-        if (fx > -60 && fy > -20 && fx < w + 60 && fy < h + 20) {
-          ctx.font = "600 13px ui-sans-serif, system-ui, sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = colors.halo;
-          ctx.fillStyle = colors.label;
-          ctx.strokeText(focusMun.current.name, fx, fy);
-          ctx.fillText(focusMun.current.name, fx, fy);
-        }
-      }
-      // labels (only if they fit, no overlap)
-      ctx.font = "500 11px ui-sans-serif, system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = colors.halo;
-      ctx.fillStyle = colors.label;
-      const placed: [number, number, number, number][] = [];
-      const order = labelOrder;
-      for (const m of order) {
-        const x = ox + m.cx * s,
-          y = oy + m.cy * s;
-        if (x < -50 || y < -20 || x > w + 50 || y > h + 20) continue;
-        const tw = ctx.measureText(m.name).width;
-        if (tw > m.bw * s * 0.9 || 14 > m.bh * s * 0.6) continue;
-        const b: [number, number, number, number] = [x - tw / 2 - 2, y - 8, x + tw / 2 + 2, y + 8];
-        if (placed.some((p) => b[0] < p[2] && b[2] > p[0] && b[1] < p[3] && b[3] > p[1])) continue;
-        placed.push(b);
-        ctx.strokeText(m.name, x, y);
-        ctx.fillText(m.name, x, y);
-      }
       const hv = hover.current ?? selectedRef.current;
       if (hv) {
         const sz = s;
@@ -686,6 +659,10 @@ export function MgGrid(props: Props) {
     previousOwners.current = props.territories;
     drawRef.current();
   }, [grid, props.territories]);
+  const municipalRows = useMemo(
+    () => municipalRankings(props.territories ?? {}),
+    [props.territories],
+  );
   const selectedOwner = selected ? props.territories?.[selected.c + "-" + selected.r] : undefined;
   const hoverOwner = tip ? props.territories?.[tip.c + "-" + tip.r] : undefined;
   const alreadyOurs = !!props.playerClub && selectedOwner?.club === props.playerClub;
@@ -812,16 +789,29 @@ export function MgGrid(props: Props) {
           <div
             className="pointer-events-none absolute z-10 rounded-md bg-popover px-2.5 py-1.5 font-mono text-xs text-popover-foreground shadow-lg"
             style={{
-              left: Math.min(tip.x + 14, Math.max(8, (wrap.current?.clientWidth ?? 300) - 220)),
-              top: Math.min(tip.y + 14, Math.max(8, (wrap.current?.clientHeight ?? 200) - 90)),
-              maxWidth: 210,
+              left: Math.min(tip.x + 14, Math.max(8, (wrap.current?.clientWidth ?? 300) - 280)),
+              top: Math.min(tip.y + 14, Math.max(8, (wrap.current?.clientHeight ?? 200) - 330)),
+              maxWidth: 270,
             }}
           >
             {tip.mun && <div className="font-sans font-semibold">{tip.mun}</div>}
             <div className="font-semibold">
               MG · {tip.c}-{tip.r}
             </div>
-            <div>{hoverOwner ? clubById(hoverOwner.club).name : "Território neutro"}</div>
+            <MunicipalControl
+              city={tip.mun}
+              rows={tip.mun ? municipalRows.get(tip.mun) : undefined}
+            />
+            <div className="hover-cell-owner">
+              Quadrado:{" "}
+              {hoverOwner ? (
+                <>
+                  <ClubCrest club={hoverOwner.club} /> {clubById(hoverOwner.club).name}
+                </>
+              ) : (
+                "neutro"
+              )}
+            </div>
             <div>
               {tip.lat.toFixed(5)}, {tip.lon.toFixed(5)}
             </div>
@@ -856,12 +846,13 @@ export function MgGrid(props: Props) {
               MG · {selected.c}-{selected.r} &nbsp; / &nbsp; {selected.lat.toFixed(5)},{" "}
               {selected.lon.toFixed(5)}
             </p>
+            <MunicipalControl
+              city={selected.mun}
+              rows={selected.mun ? municipalRows.get(selected.mun) : undefined}
+            />
             <span className="neutral">
-              <i
-                style={{
-                  background: selectedOwner ? clubById(selectedOwner.club).color : undefined,
-                }}
-              />{" "}
+              {selectedOwner ? <ClubCrest club={selectedOwner.club} /> : <i />}
+              <span>Quadrado:</span>{" "}
               {selectedOwner ? clubById(selectedOwner.club).name : "Território neutro"}
             </span>
             <button
