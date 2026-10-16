@@ -99,6 +99,7 @@
   --cell: oklch(0.62 0.12 150);
   --cell-hover: oklch(0.85 0.17 85);
   --grid-line: oklch(0.45 0.09 150 / 60%);
+  --mun-line: oklch(0.98 0.01 150 / 85%);
 }
 
 .dark {

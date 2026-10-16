@@ -12,7 +12,19 @@ type Grid = {
   maxLat: number;
   mPerDegLon: number;
   total: number;
+  muns: Mun[];
 };
+
+type Mun = { name: string; path: Path2D; rings: [number, number][][]; cx: number; cy: number; bw: number; bh: number; x0: number; y0: number; x1: number; y1: number };
+
+function inRings(rings: [number, number][][], x: number, y: number) {
+  let inside = false;
+  for (const ring of rings) for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]!, [xj, yj] = ring[j]!;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
 
 function css(name: string) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -50,7 +62,26 @@ async function buildGrid(): Promise<Grid> {
   const mask = new Uint8Array(cols * rows);
   let total = 0;
   for (let i = 0; i < mask.length; i++) if (data[i * 4 + 3]! > 127) { mask[i] = 1; total++; }
-  return { cols, rows, mask, maskCanvas: c, minLon, maxLat, mPerDegLon, total };
+  const raw: { n: string; g: { type: string; coordinates: any } }[] = await fetch("/data/mg-mun.json").then((r) => r.json());
+  const muns: Mun[] = raw.map(({ n, g }) => {
+    const ps: [number, number][][][] = g.type === "Polygon" ? [g.coordinates] : g.coordinates;
+    const path = new Path2D();
+    const rings: [number, number][][] = [];
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, ax = 0, ay = 0, aa = 0;
+    for (const p of ps) p.forEach((ring, ri) => {
+      const pr = ring.map(([x, y]) => [((x - minLon) * mPerDegLon) / CELL_M, ((maxLat - y) * M_PER_DEG_LAT) / CELL_M] as [number, number]);
+      rings.push(pr);
+      pr.forEach(([x, y], i) => {
+        i ? path.lineTo(x, y) : path.moveTo(x, y);
+        x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+        if (ri === 0) { const [nx, ny] = pr[(i + 1) % pr.length]!; const cr = x * ny - nx * y; aa += cr; ax += (x + nx) * cr; ay += (y + ny) * cr; }
+      });
+      path.closePath();
+    });
+    const cx = aa ? ax / (3 * aa) : (x0 + x1) / 2, cy = aa ? ay / (3 * aa) : (y0 + y1) / 2;
+    return { name: n, path, rings, cx, cy, bw: x1 - x0, bh: y1 - y0, x0, y0, x1, y1 };
+  });
+  return { cols, rows, mask, maskCanvas: c, minLon, maxLat, mPerDegLon, total, muns };
 }
 
 export function MgGrid() {
@@ -59,7 +90,8 @@ export function MgGrid() {
   const [grid, setGrid] = useState<Grid | null>(null);
   const view = useRef({ scale: 1, ox: 0, oy: 0 });
   const hover = useRef<{ c: number; r: number } | null>(null);
-  const [tip, setTip] = useState<{ x: number; y: number; c: number; r: number; lat: number; lon: number } | null>(null);
+  const hoverMun = useRef<Mun | null>(null);
+  const [tip, setTip] = useState<{ x: number; y: number; c: number; r: number; lat: number; lon: number; mun?: string } | null>(null);
 
   useEffect(() => { buildGrid().then(setGrid); }, []);
 
@@ -67,7 +99,7 @@ export function MgGrid() {
     if (!grid || !canvas.current || !wrap.current) return;
     const cv = canvas.current, el = wrap.current;
     const ctx = cv.getContext("2d")!;
-    const colors = { line: css("--grid-line"), hl: css("--cell-hover"), border: css("--foreground") };
+    const colors = { line: css("--grid-line"), hl: css("--cell-hover"), border: css("--foreground"), mun: css("--mun-line"), label: css("--foreground"), halo: css("--card") };
 
     const draw = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -87,6 +119,32 @@ export function MgGrid() {
           const x = ox + c * s, y = oy + r * s;
           ctx.fillRect(x, y, s, 1); ctx.fillRect(x, y, 1, s);
         }
+      }
+      // municipal borders
+      ctx.save();
+      ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
+      ctx.strokeStyle = colors.mun; ctx.lineWidth = 1 / s; ctx.lineJoin = "round";
+      for (const m of grid.muns) {
+        if (ox + m.x1 * s < 0 || ox + m.x0 * s > w || oy + m.y1 * s < 0 || oy + m.y0 * s > h) continue;
+        ctx.stroke(m.path);
+      }
+      if (hoverMun.current) { ctx.lineWidth = 2.5 / s; ctx.strokeStyle = colors.border; ctx.stroke(hoverMun.current.path); }
+      ctx.restore();
+      // labels (only if they fit, no overlap)
+      ctx.font = "500 11px ui-sans-serif, system-ui, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineWidth = 3; ctx.strokeStyle = colors.halo; ctx.fillStyle = colors.label;
+      const placed: [number, number, number, number][] = [];
+      const order = [...grid.muns].sort((a, b) => b.bw * b.bh - a.bw * a.bh);
+      for (const m of order) {
+        const x = ox + m.cx * s, y = oy + m.cy * s;
+        if (x < -50 || y < -20 || x > w + 50 || y > h + 20) continue;
+        const tw = ctx.measureText(m.name).width;
+        if (tw > m.bw * s * 0.9 || 14 > m.bh * s * 0.6) continue;
+        const b: [number, number, number, number] = [x - tw / 2 - 2, y - 8, x + tw / 2 + 2, y + 8];
+        if (placed.some((p) => b[0] < p[2] && b[2] > p[0] && b[1] < p[3] && b[3] > p[1])) continue;
+        placed.push(b);
+        ctx.strokeText(m.name, x, y); ctx.fillText(m.name, x, y);
       }
       const hv = hover.current;
       if (hv) {
@@ -119,8 +177,11 @@ export function MgGrid() {
         hover.current = { c, r };
         const lon = grid.minLon + ((c + 0.5) * CELL_M) / grid.mPerDegLon;
         const lat = grid.maxLat - ((r + 0.5) * CELL_M) / M_PER_DEG_LAT;
-        setTip({ x: mx, y: my, c, r, lat, lon });
-      } else { hover.current = null; setTip(null); }
+        const gx = (mx - ox) / s, gy = (my - oy) / s;
+        const m = grid.muns.find((m) => gx >= m.x0 && gx <= m.x1 && gy >= m.y0 && gy <= m.y1 && inRings(m.rings, gx, gy)) ?? null;
+        hoverMun.current = m;
+        setTip({ x: mx, y: my, c, r, lat, lon, mun: m?.name });
+      } else { hover.current = null; hoverMun.current = null; setTip(null); }
       draw();
     };
     const onDown = (e: PointerEvent) => {
@@ -129,7 +190,7 @@ export function MgGrid() {
       el.setPointerCapture(e.pointerId);
     };
     const onUp = () => { drag = null; };
-    const onLeave = () => { hover.current = null; setTip(null); draw(); };
+    const onLeave = () => { hover.current = null; hoverMun.current = null; setTip(null); draw(); };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const rect = el.getBoundingClientRect();
@@ -172,6 +233,7 @@ export function MgGrid() {
             className="pointer-events-none absolute z-10 rounded-md bg-popover px-2.5 py-1.5 font-mono text-xs text-popover-foreground shadow-lg"
             style={{ left: tip.x + 14, top: tip.y + 14 }}
           >
+            {tip.mun && <div className="font-sans font-semibold">{tip.mun}</div>}
             <div className="font-semibold">ID {tip.c}-{tip.r}</div>
             <div>{tip.lat.toFixed(5)}, {tip.lon.toFixed(5)}</div>
           </div>
