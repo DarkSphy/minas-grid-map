@@ -205,7 +205,9 @@ export function MgGrid() {
     fit();
 
     let drag: { x: number; y: number } | null = null;
+    const inBox = (t: EventTarget | null) => !!boxRef.current?.contains(t as Node);
     const onMove = (e: PointerEvent) => {
+      if (inBox(e.target) && !drag) return;
       const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
       if (drag) {
