@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  redeemDemoPack,
   createWorld,
   rollSeason,
   loginPlayer,
@@ -41,6 +42,8 @@ const schema = z.object({
       joinedAt: z.number(),
       clubs: z.record(club),
       lastActionDay: z.string().nullable(),
+      extraActions: z.number().int().nonnegative().optional(),
+      demoOrders: z.array(z.string()).optional(),
       avatar: z.string().refine(validAvatar).nullable().optional(),
       readNotifications: z.array(z.string()).optional(),
     }),
@@ -66,6 +69,7 @@ export interface GameRepository {
   capture(playerId: string, cell: Cell): Promise<World>;
   avatar(playerId: string, avatar: string | null): Promise<World>;
   markRead(playerId: string, ids: string[]): Promise<World>;
+  demoPack(playerId: string, packId: string, orderId: string): Promise<World>;
   session(): string | null;
   setSession(id: string | null): void;
   subscribe(listener: () => void): () => void;
@@ -144,6 +148,8 @@ export const localRepository: GameRepository = {
   capture: (playerId, cell) => mutate((w, now) => captureCell(w, playerId, cell, now)),
   avatar: (playerId, avatar) => mutate((w) => updateAvatar(w, playerId, avatar)),
   markRead: (playerId, ids) => mutate((w) => markNotificationsRead(w, playerId, ids)),
+  demoPack: (playerId, packId, orderId) =>
+    mutate((w) => redeemDemoPack(w, playerId, packId, orderId)),
   session: () => sessionStorage.getItem(SESSION),
   setSession: (id) => {
     if (id) sessionStorage.setItem(SESSION, id);

@@ -31,6 +31,8 @@ export type Player = {
   joinedAt: number;
   clubs: Record<string, ClubId>;
   lastActionDay: string | null;
+  extraActions?: number | undefined;
+  demoOrders?: string[] | undefined;
   avatar?: string | null | undefined;
   readNotifications?: string[] | undefined;
 };
@@ -117,7 +119,7 @@ export function rollSeason(world: World, now: number): World {
   return { ...world, season: number, territories: {}, history: [...world.history, summary] };
 }
 export function canAct(player: Player | null, now: number) {
-  return !!player && player.lastActionDay !== dayInBrasilia(now);
+  return actionBalance(player, now) > 0;
 }
 export function loginPlayer(world: World, name: string, now: number): { world: World; id: string } {
   const clean = name.trim().replace(/\s+/g, " ").slice(0, 48);
@@ -163,7 +165,18 @@ export function captureCell(world: World, playerId: string, cell: Cell, now: num
   return {
     ...world,
     territories: { ...world.territories, [cell.id]: territory },
-    players: { ...world.players, [playerId]: { ...player, lastActionDay: dayInBrasilia(now) } },
+    players: {
+      ...world.players,
+      [playerId]: {
+        ...player,
+        lastActionDay:
+          player.lastActionDay !== dayInBrasilia(now) ? dayInBrasilia(now) : player.lastActionDay,
+        extraActions: Math.max(
+          0,
+          (player.extraActions ?? 0) - (player.lastActionDay === dayInBrasilia(now) ? 1 : 0),
+        ),
+      },
+    },
     captures: [
       ...world.captures,
       {
@@ -216,4 +229,58 @@ export function markNotificationsRead(world: World, playerId: string, ids: strin
   if (!player) throw new Error("Entre para ler suas notificações.");
   const readNotifications = [...new Set([...(player.readNotifications ?? []), ...ids])].slice(-500);
   return { ...world, players: { ...world.players, [playerId]: { ...player, readNotifications } } };
+}
+
+export const ACTION_PACKS = [
+  { id: "starter", name: "Primeiro avanço", actions: 5, cents: 490 },
+  { id: "squad", name: "Força da torcida", actions: 10, cents: 980 },
+  { id: "territory", name: "Domínio em campo", actions: 20, cents: 1960 },
+] as const;
+export function actionBalance(player: Player | null, now: number) {
+  return player
+    ? (player.lastActionDay !== dayInBrasilia(now) ? 1 : 0) + (player.extraActions ?? 0)
+    : 0;
+}
+// Local demonstration only. Production credit must originate from a verified payment webhook.
+export function redeemDemoPack(
+  world: World,
+  playerId: string,
+  packId: string,
+  orderId: string,
+): World {
+  const player = world.players[playerId];
+  if (!player) throw new Error("Entre para testar um pacote.");
+  const pack = ACTION_PACKS.find((p) => p.id === packId);
+  if (!pack || !orderId || orderId.length > 100) throw new Error("Pacote ou pedido inválido.");
+  if (player.demoOrders?.includes(orderId)) return world;
+  return {
+    ...world,
+    players: {
+      ...world.players,
+      [playerId]: {
+        ...player,
+        extraActions: (player.extraActions ?? 0) + pack.actions,
+        demoOrders: [...(player.demoOrders ?? []), orderId],
+      },
+    },
+  };
+}
+export function municipalPodiums(world: World) {
+  const cities = new Map<string, Map<string, number>>();
+  for (const t of Object.values(world.territories)) {
+    if (!t.mun || !world.players[t.playerId]) continue;
+    const totals = cities.get(t.mun) ?? new Map<string, number>();
+    totals.set(t.playerId, (totals.get(t.playerId) ?? 0) + 1);
+    cities.set(t.mun, totals);
+  }
+  return [...cities].flatMap(([city, totals]) => {
+    const rows = [...totals].map(([playerId, count]) => ({ playerId, count }));
+    return rows
+      .map((row) => ({
+        ...row,
+        city,
+        position: 1 + rows.filter((r) => r.count > row.count).length,
+      }))
+      .filter((row) => row.position <= 3);
+  });
 }

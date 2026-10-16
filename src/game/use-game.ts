@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { localRepository } from "./repository";
-import { canAct, seasonEnds, type Cell, type ClubId, type World } from "./model";
+import { actionBalance, canAct, seasonEnds, type Cell, type ClubId, type World } from "./model";
 export function useGame() {
   const [world, setWorld] = useState<World | null>(null);
   const [id, setId] = useState<string | null>(null);
@@ -63,6 +63,9 @@ export function useGame() {
     pending,
     ready: !!world,
     available: canAct(player, now),
+    balance: actionBalance(player, now),
+    demoPack: (packId: string, orderId: string) =>
+      run(() => localRepository.demoPack(id ?? "", packId, orderId)),
     clearError: () => setError(""),
     refresh,
     async login(name: string, avatar?: string | null) {

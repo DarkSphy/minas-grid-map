@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Activity, X } from "lucide-react";
+import { ShoppingBag, Users, Activity, X } from "lucide-react";
 import { ActivityFeed, NotificationBell, StateTicker } from "@/game/LivePanels";
 import { useEffect, useState } from "react";
 import { Map, BarChart3, Trophy, UserRound, ArrowUpRight } from "lucide-react";
 import { MgGrid } from "@/components/MgGrid";
 import { ClubCrest } from "@/game/ClubCrest";
+import { CommunityPanel } from "@/game/CommunityPanel";
 import { useGame } from "@/game/use-game";
 import { GamePanel, PlayerDialog, RankingTable } from "@/game/GamePanels";
 import { CLUBS, clubById, ranking, type Cell } from "@/game/model";
@@ -28,6 +29,8 @@ const tabs = [
   { id: "map", label: "Mapa", icon: Map },
   { id: "ranking", label: "Ranking", icon: BarChart3 },
   { id: "season", label: "Temporada", icon: Trophy },
+  { id: "supporters", label: "Torcida", icon: Users },
+  { id: "shop", label: "Loja", icon: ShoppingBag },
   { id: "profile", label: "Perfil", icon: UserRound },
 ] as const;
 function Index() {
@@ -125,9 +128,22 @@ function Index() {
                 : "Escolher meu clube"}
             </button>
           </div>
+          {game.player && game.club && !game.available && (
+            <div className="actions-exhausted">
+              <span>
+                <strong>Suas ações esgotaram.</strong> Uma nova ação gratuita chega à meia-noite.
+              </span>
+              <button onClick={() => setTab("shop")}>
+                Ver pacotes <ShoppingBag size={15} />
+              </button>
+            </div>
+          )}
           <div className="map-stage">
             <MgGrid
               territories={game.world?.territories}
+              players={game.world?.players}
+              playerId={game.player?.id}
+              onShop={() => setTab("shop")}
               playerClub={game.club}
               available={game.available}
               pending={game.pending}
@@ -151,7 +167,10 @@ function Index() {
             <span className="legend-scale">Células ≈ 500 m</span>
           </div>
         </section>
-        {tab !== "map" && (
+        {(tab === "shop" || tab === "supporters") && (
+          <CommunityPanel tab={tab} game={game} openLogin={enter} openMap={() => setTab("map")} />
+        )}
+        {tab !== "map" && tab !== "shop" && tab !== "supporters" && (
           <GamePanel
             tab={tab}
             game={game}

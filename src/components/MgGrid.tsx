@@ -177,6 +177,9 @@ async function buildGrid(): Promise<Grid> {
 }
 
 type Props = {
+  players?: Record<string, import("@/game/model").Player> | undefined;
+  playerId?: string | undefined;
+  onShop: () => void;
   territories?: Record<string, Territory> | undefined;
   playerClub: ClubId | null;
   available: boolean;
@@ -874,6 +877,28 @@ export function MgGrid(props: Props) {
               MG · {selected.c}-{selected.r} &nbsp; / &nbsp; {selected.lat.toFixed(5)},{" "}
               {selected.lon.toFixed(5)}
             </p>
+            {selectedOwner && props.players?.[selectedOwner.playerId] && (
+              <div
+                className={`territory-owner ${selectedOwner.playerId === props.playerId ? "is-you" : ""}`}
+              >
+                {props.players[selectedOwner.playerId]!.avatar ? (
+                  <img
+                    src={props.players[selectedOwner.playerId]!.avatar!}
+                    alt="Foto do conquistador"
+                  />
+                ) : (
+                  <span className="owner-initial">
+                    {props.players[selectedOwner.playerId]!.name[0]}
+                  </span>
+                )}
+                <div>
+                  <small>
+                    {selectedOwner.playerId === props.playerId ? "SEU QUADRADO" : "CONQUISTADO POR"}
+                  </small>
+                  <strong>{props.players[selectedOwner.playerId]!.name}</strong>
+                </div>
+              </div>
+            )}
             <MunicipalControl
               city={selected.mun}
               rows={selected.mun ? municipalRows.get(selected.mun) : undefined}
@@ -885,13 +910,12 @@ export function MgGrid(props: Props) {
             </span>
             <button
               className="war-primary capture-button"
-              disabled={
-                !props.ready ||
-                props.pending ||
-                alreadyOurs ||
-                (!!props.playerClub && !props.available)
-              }
+              disabled={!props.ready || props.pending || alreadyOurs}
               onClick={() => {
+                if (props.playerClub && !props.available) {
+                  props.onShop();
+                  return;
+                }
                 if (selected)
                   void props.onCapture({
                     id: selected.c + "-" + selected.r,

@@ -2,6 +2,7 @@ import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, ArrowUpRight, LogOut, Shield, Trophy } from "lucide-react";
 import {
+  dayInBrasilia,
   CLUBS,
   clubById,
   countdown,
@@ -226,13 +227,13 @@ export function GamePanel({
                   <span>territórios ainda sob seu controle</span>
                 </div>
                 <div>
-                  <b>{game.available ? 1 : 0}</b>
+                  <b>{game.balance}</b>
                   <span>ação gratuita disponível</span>
                 </div>
               </div>
               <div className="panel-note">
-                {game.available
-                  ? "Sua ação de hoje está disponível."
+                {player.lastActionDay !== dayInBrasilia(now)
+                  ? "Sua ação gratuita de hoje está disponível."
                   : `Próxima ação em ${countdown(nextFreeAction(now) - now)}`}
                 <span>Uma ação por dia, renovada à meia-noite de Brasília.</span>
               </div>
