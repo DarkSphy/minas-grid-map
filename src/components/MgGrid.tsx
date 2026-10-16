@@ -159,13 +159,15 @@ export function MgGrid() {
         ctx.stroke(m.path);
       }
       if (hoverMun.current) { ctx.lineWidth = 2.5 / s; ctx.strokeStyle = colors.border; ctx.stroke(hoverMun.current.path); }
-      if (focusMun.current && focusMun.current !== hoverMun.current) {
-        ctx.lineWidth = 3 / s; ctx.strokeStyle = colors.border; ctx.stroke(focusMun.current.path);
-        const fx = ox + focusMun.current.cx * s, fy = oy + focusMun.current.cy * s;
-        ctx.font = "600 13px ui-sans-serif, system-ui, sans-serif";
-        ctx.strokeText(focusMun.current.name, fx, fy); ctx.fillText(focusMun.current.name, fx, fy);
-      }
+      if (focusMun.current && focusMun.current !== hoverMun.current) { ctx.lineWidth = 3 / s; ctx.strokeStyle = colors.border; ctx.stroke(focusMun.current.path); }
       ctx.restore();
+      if (focusMun.current && focusMun.current !== hoverMun.current) {
+        const fx = ox + focusMun.current.cx * s, fy = oy + focusMun.current.cy * s;
+        if (fx > -60 && fy > -20 && fx < w + 60 && fy < h + 20) {
+          ctx.font = "600 13px ui-sans-serif, system-ui, sans-serif";
+          ctx.strokeText(focusMun.current.name, fx, fy); ctx.fillText(focusMun.current.name, fx, fy);
+        }
+      }
       // labels (only if they fit, no overlap)
       ctx.font = "500 11px ui-sans-serif, system-ui, sans-serif";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
