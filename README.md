@@ -52,7 +52,7 @@ npm run dev
 
 A interface inicial mantém a integração Lovable, o Canvas e a grade geográfica existente. Inclui navegação Mapa/Ranking/Temporada/Perfil, busca municipal, zoom por pinça e botões, navegação por teclado e seleção de célula com painel inferior. As outras abas informam o escopo futuro; não exibem rankings simulados. Autenticação, conquistas, limite diário e temporadas ativas ainda não foram implementados.
 
-A marca usa um recorte de exibição via CSS da referência original fornecida pelo proprietário, preservando mapa pincelado, bola, nome e slogan. O arquivo original fica em `public/assets/soccer-war-brand-reference.png`.
+A marca usa diretamente o PNG transparente fornecido pelo proprietário, preservando mapa pincelado, bola, nome e slogan. O arquivo original fica em `public/assets/soccer-war-logo.png`.
 
 A resolução aproximada e os IDs da grade foram preservados. A projeção, a origem fixa e a política de fronteiras precisam ser definidas antes de persistir conquistas.
 
@@ -67,3 +67,7 @@ A resolução aproximada e os IDs da grade foram preservados. A projeção, a or
 - Simular falha na requisição dos dados: apresentar erro e permitir tentar novamente.
 
 Antes de sincronizar: executar build, TypeScript e testes; verificar mudanças remotas, integrar a branch revisada à branch ativa do Lovable e confirmar o commit no editor. Não reescrever o histórico publicado.
+
+### Ajustes de dimensionamento
+
+A linha central do layout ocupa somente a altura disponível entre o cabeçalho e a navegação. Painéis e colunas têm rolagem interna com cores do site; em telas baixas, o conteúdo continua acessível sem ficar encoberto. O selo decorativo de pré-temporada foi removido.

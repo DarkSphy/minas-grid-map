@@ -1,16 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  Map,
-  BarChart3,
-  Trophy,
-  UserRound,
-  ArrowUpRight,
-  Flag,
-  Shield,
-  MapPin,
-  ChevronRight,
-} from "lucide-react";
+import { Map, BarChart3, Trophy, UserRound, ArrowUpRight } from "lucide-react";
 import { MgGrid } from "@/components/MgGrid";
 
 export const Route = createFileRoute("/")({
@@ -39,20 +29,18 @@ function Index() {
     <main className="war-app">
       <header className="war-header">
         <a href="/" className="war-brand" aria-label="Soccer War Brasil — início">
-          <span className="brand-original" />
+          <img
+            className="brand-original"
+            src="/assets/soccer-war-logo.png"
+            alt="Soccer War Brasil — Conquiste sua cidade, um quadrado por vez."
+            width={2172}
+            height={724}
+          />
         </a>
-        <span className="header-tagline">
-          Sua cidade. Seu time. <strong>Seu território.</strong>
-        </span>
-        <span className="beta-tag">
-          <span /> PRÉ-TEMPORADA
-        </span>
+        <span className="header-tagline">Minas Gerais</span>
       </header>
       <div className="war-layout">
         <aside className="war-intro">
-          <span className="eyebrow">
-            <Flag size={14} /> O FUTEBOL GANHOU UM NOVO CAMPO
-          </span>
           <h1>
             MINAS
             <br />É O NOSSO
@@ -86,14 +74,11 @@ function Index() {
         >
           <div className="map-heading">
             <div>
-              <span className="eyebrow">CAMPO DE DISPUTA / 01</span>
+              <span className="eyebrow">MAPA TERRITORIAL</span>
               <h2>
                 MINAS GERAIS<span>MG</span>
               </h2>
             </div>
-            <span className="map-live">
-              <span /> EXPLORE O MAPA
-            </span>
           </div>
           <div className="map-stage">
             <MgGrid />
@@ -107,15 +92,10 @@ function Index() {
         </section>
         {tab !== "map" && (
           <section className="war-panel" aria-labelledby="panel-title">
-            <span className="eyebrow">SOCCER WAR BRASIL / EM PREPARAÇÃO</span>
+            <span className="eyebrow">EM DESENVOLVIMENTO</span>
             {tab === "ranking" && (
               <>
-                <BarChart3 className="panel-icon" />
-                <h2 id="panel-title">
-                  CADA QUADRADO
-                  <br />
-                  VAI CONTAR.
-                </h2>
+                <h2 id="panel-title">RANKING</h2>
                 <p>
                   O ranking estadual e os rankings por cidade serão calculados a partir das
                   conquistas reais. A disputa ainda não começou.
@@ -138,35 +118,25 @@ function Index() {
             )}
             {tab === "season" && (
               <>
-                <Trophy className="panel-icon" />
-                <h2 id="panel-title">
-                  A PRÓXIMA
-                  <br />
-                  RIVALIDADE COMEÇA AQUI.
-                </h2>
+                <h2 id="panel-title">TEMPORADAS</h2>
                 <p>
                   Temporadas de 14 dias. Um estado para disputar. A primeira temporada ainda não tem
                   data de início.
                 </p>
                 <div className="panel-note">
-                  Pré-temporada<span>Explore o território enquanto preparamos a disputa.</span>
+                  Primeira temporada<span>Data de início a definir.</span>
                 </div>
               </>
             )}
             {tab === "profile" && (
               <>
-                <Shield className="panel-icon" />
-                <h2 id="panel-title">
-                  SUA TORCIDA.
-                  <br />
-                  SUA HISTÓRIA.
-                </h2>
+                <h2 id="panel-title">SEU PERFIL</h2>
                 <p>
                   Em breve você poderá entrar, escolher seu clube e acompanhar sua participação.
                   Nesta primeira etapa, explore o mapa sem cadastro.
                 </p>
                 <div className="panel-note">
-                  Seu lugar na arquibancada está reservado.
+                  Seu perfil estará disponível após o cadastro.
                   <span>Login e escolha do clube chegam na próxima fase.</span>
                 </div>
               </>
@@ -178,9 +148,7 @@ function Index() {
         )}
         <aside className="war-sidebar">
           <div className="side-card">
-            <span className="eyebrow">
-              <MapPin size={15} /> RECONHEÇA O TERRITÓRIO
-            </span>
+            <span className="eyebrow">COMO EXPLORAR</span>
             <h3>
               A sua cidade
               <br />
@@ -198,18 +166,6 @@ function Index() {
                 <b>03</b> Toque em um território
               </span>
             </div>
-          </div>
-          <div className="side-callout">
-            <Flag size={24} />
-            <h3>
-              Uma nova forma
-              <br />
-              de vestir a camisa.
-            </h3>
-            <p>O próximo capítulo do futebol mineiro vai ser escrito por você.</p>
-            <span>
-              SUA CIDADE. SEU TIME. SEU TERRITÓRIO. <ChevronRight size={15} />
-            </span>
           </div>
         </aside>
       </div>

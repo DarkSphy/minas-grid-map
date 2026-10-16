@@ -192,7 +192,7 @@ input:focus-visible {
 }
 .war-app {
   height: 100dvh;
-  min-height: 460px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -214,9 +214,9 @@ input:focus-visible {
 }
 .brand-original {
   display: block;
-  width: 310px;
-  height: 72px;
-  background: url("/assets/soccer-war-brand-reference.png") -42px -63px / 1003.2px 564.6px no-repeat;
+  width: min(310px, 100%);
+  height: auto;
+  object-fit: contain;
 }
 .header-tagline {
   font-size: 12px;
@@ -683,10 +683,7 @@ input:focus-visible {
     gap: 4px;
   }
   .brand-original {
-    width: 245px;
-    height: 57px;
-    background-size: 795px 447.5px;
-    background-position: -33.3px -49.9px;
+    width: min(245px, 100%);
   }
   .beta-tag {
     font-size: 7px;
@@ -751,10 +748,7 @@ input:focus-visible {
 }
 @media (max-width: 370px) {
   .brand-original {
-    width: 216px;
-    height: 51px;
-    background-size: 702px 395px;
-    background-position: -29.4px -44.1px;
+    width: min(245px, 100%);
   }
   .beta-tag {
     font-size: 6px;
@@ -786,5 +780,108 @@ input:focus-visible {
   }
   .war-header {
     padding-inline: 10px;
+  }
+}
+
+/* Reserve the navigation row; each content column scrolls inside its own available height. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+.war-header {
+  flex-shrink: 0;
+}
+.war-brand {
+  min-width: 0;
+  max-width: 100%;
+}
+.war-layout {
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+.war-intro,
+.war-sidebar,
+.war-panel {
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+.war-intro {
+  padding-bottom: 16px;
+}
+.war-sidebar > * {
+  flex-shrink: 0;
+}
+.war-panel {
+  align-self: stretch;
+  margin: 0;
+}
+.war-nav {
+  position: relative;
+  z-index: 30;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #45645c #0b1c24;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: #0b1c24;
+}
+*::-webkit-scrollbar-thumb {
+  background: #45645c;
+  border: 2px solid #0b1c24;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #648779;
+}
+*::-webkit-scrollbar-corner {
+  background: #0b1c24;
+}
+.territory-sheet {
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+}
+@media (max-width: 700px) {
+  .war-header {
+    min-height: 0;
+    padding-block: 8px;
+  }
+  .war-panel {
+    flex: 1;
+    margin: 0;
+    min-height: 0;
+  }
+  .war-panel h2 {
+    font-size: 30px;
+  }
+}
+@media (max-height: 650px) {
+  .war-header {
+    min-height: 0;
+    padding-block: 5px;
+  }
+  .brand-original {
+    width: 240px;
+  }
+  .war-layout {
+    padding-top: 12px;
+    gap: 18px;
+  }
+  .war-panel {
+    padding: 22px;
+  }
+  .war-panel h2 {
+    font-size: 30px;
+    margin-bottom: 14px;
+  }
+  .war-nav button {
+    min-height: 54px;
   }
 }
