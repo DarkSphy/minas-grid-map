@@ -228,6 +228,7 @@ export function MgGrid() {
       draw();
     };
     const onDown = (e: PointerEvent) => {
+      if (inBox(e.target)) return;
       const rect = el.getBoundingClientRect();
       drag = { x: e.clientX - rect.left, y: e.clientY - rect.top };
       el.setPointerCapture(e.pointerId);
