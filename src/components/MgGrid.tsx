@@ -269,7 +269,13 @@ export function MgGrid() {
       </div>
       <div ref={wrap} className="relative flex-1 cursor-crosshair touch-none overflow-hidden rounded-xl border bg-card">
         <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
-        <div ref={boxRef} className="absolute left-3 top-3 z-20 w-64 max-w-[calc(100%-1.5rem)]">
+        <div
+          ref={boxRef}
+          className="absolute left-3 top-3 z-20 w-64 max-w-[calc(100%-1.5rem)]"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerMove={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center gap-2 rounded-md border bg-popover px-2.5 py-1.5 shadow-md">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-muted-foreground">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
