@@ -21,7 +21,7 @@ function css(name: string) {
 async function buildGrid(): Promise<Grid> {
   const geo = await fetch("/data/mg.json").then((r) => r.json());
   const g = geo.features[0].geometry;
-  const polys: number[][][][] = g.type === "Polygon" ? [g.coordinates] : g.coordinates;
+  const polys: [number, number][][][] = g.type === "Polygon" ? [g.coordinates] : g.coordinates;
   let minLon = 180, maxLon = -180, minLat = 90, maxLat = -90;
   for (const p of polys) for (const ring of p) for (const [x, y] of ring) {
     minLon = Math.min(minLon, x); maxLon = Math.max(maxLon, x);
@@ -49,7 +49,7 @@ async function buildGrid(): Promise<Grid> {
   const data = ctx.getImageData(0, 0, cols, rows).data;
   const mask = new Uint8Array(cols * rows);
   let total = 0;
-  for (let i = 0; i < mask.length; i++) if (data[i * 4 + 3] > 127) { mask[i] = 1; total++; }
+  for (let i = 0; i < mask.length; i++) if (data[i * 4 + 3]! > 127) { mask[i] = 1; total++; }
   return { cols, rows, mask, maskCanvas: c, minLon, maxLat, mPerDegLon, total };
 }
 
